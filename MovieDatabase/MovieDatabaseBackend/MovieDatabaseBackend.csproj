@@ -11,4 +11,9 @@
     <PackageReference Include="NSwag.Generation.AspNetCore" Version="14.6.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repositories\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
