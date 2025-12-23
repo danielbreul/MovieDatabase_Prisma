@@ -1,6 +1,4 @@
-﻿using MovieDatabaseBackend.Entities;
-
-namespace MovieDatabaseBackend.Dtos
+﻿namespace MovieDatabaseBackend.Dtos
 {
     public class MovieDetailDto(int id, string title)
     {

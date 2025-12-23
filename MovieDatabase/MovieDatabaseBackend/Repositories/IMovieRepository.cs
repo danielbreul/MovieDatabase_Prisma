@@ -1,11 +1,12 @@
-﻿using MovieDatabaseBackend.Data;
-using MovieDatabaseBackend.Entities;
+﻿using MovieDatabaseBackend.Entities;
 
 namespace MovieDatabaseBackend.Repositories
 {
     public interface IMovieRepository
     {
-        IEnumerable<Movie> GetMovies(string? title);
-        Movie GetMovie(int id);
+        public IEnumerable<Movie> GetMovies(string? title);
+        public Movie? GetMovie(int id);
+        public Movie AddMovie(Movie movie);
+        public void RemoveMovie(Movie movie);
     }
 }

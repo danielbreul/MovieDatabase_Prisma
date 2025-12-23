@@ -3,7 +3,6 @@ using MovieDatabaseBackend.Dtos;
 
 namespace MovieDatabaseBackend.Controllers
 {
-
     [Route("genres")]
     [ApiController]
     public class GenresController : ControllerBase

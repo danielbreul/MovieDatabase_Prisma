@@ -3,7 +3,6 @@ using MovieDatabaseBackend.Dtos;
 
 namespace MovieDatabaseBackend.Controllers
 {
-
     [Route("writers")]
     [ApiController]
     public class WritersController : ControllerBase

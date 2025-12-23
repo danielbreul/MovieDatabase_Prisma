@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using MovieDatabaseBackend.Dtos;
+﻿using MovieDatabaseBackend.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using MovieDatabaseBackend.Services;
 

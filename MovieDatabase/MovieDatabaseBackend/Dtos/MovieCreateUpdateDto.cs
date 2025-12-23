@@ -1,6 +1,4 @@
-﻿using MovieDatabaseBackend.Entities;
-using System.ComponentModel.DataAnnotations;
-using System.IO;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MovieDatabaseBackend.Dtos
 {

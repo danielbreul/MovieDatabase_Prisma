@@ -1,5 +1,4 @@
 ﻿using MovieDatabaseBackend.Data;
-using MovieDatabaseBackend.Dtos;
 using MovieDatabaseBackend.Entities;
 
 namespace MovieDatabaseBackend.Repositories
@@ -15,27 +14,20 @@ namespace MovieDatabaseBackend.Repositories
             return query.ToList();
         }
 
-        public Movie GetMovie(int id)
+        public Movie? GetMovie(int id)
         {
             return _context.Movies
-                .First(m => m.Id == id);
+                .FirstOrDefault(m => m.Id == id);
         }
 
-        public void CreateMovie(MovieCreateUpdateDto movie)
+        public Movie AddMovie(Movie movie)
         {
-            _context.Movies.Add(new Movie
-            {
-                Title = movie.Title,
-                Plot = movie.Plot,
-                ReleaseDate = movie.ReleaseDate,
-                Rating = movie.Rating,
-                AgeRating = movie.AgeRating,
-                Genres = movie.Genres.ToList(),
-                Directors = movie.Directors.ToList(),
-                Writer = movie.Writer,
-                LeadActors = movie.LeadActors.ToList(),
-                Duration = movie.Duration
-            });
+            return _context.Movies.Add(movie).Entity;
+        }
+
+        public void RemoveMovie(Movie movie)
+        {
+            _context.Movies.Remove(movie);
         }
     }
 }
