@@ -1,23 +1,22 @@
-﻿using MovieDatabaseBackend.Dtos;
+﻿using MovieDatabaseBackend.Data;
+using MovieDatabaseBackend.Dtos;
 using MovieDatabaseBackend.Entities;
 using MovieDatabaseBackend.Repositories;
 
 namespace MovieDatabaseBackend.Services
 {
-    public class MovieService(IMovieRepository movieRepository, IGenreRepository genreRepository, IPersonRepository personRepository) : IMovieService
+    public class MovieService(IUnitOfWork unitOfWork) : IMovieService
     {
-        private readonly IMovieRepository _movieRepository = movieRepository;
-        private readonly IGenreRepository _genreRepository = genreRepository;
-        private readonly IPersonRepository _personRepository = personRepository;
+        private readonly IUnitOfWork _uof = unitOfWork;
 
         public IEnumerable<MovieDto> GetMovies(string? title = null)
         {
-            return _movieRepository.GetMovies(title).Select(x => new MovieDto(x.Id, x.Title));
+            return _uof.Movies.GetMovies(title).Select(x => new MovieDto(x.Id, x.Title));
         }
 
         public MovieDetailDto? GetMovie(int id)
         {
-            var movie = _movieRepository.GetMovie(id);
+            var movie = _uof.Movies.GetMovie(id);
             if (movie is not null)
             {
                 return new MovieDetailDto(movie.Id, movie.Title)
@@ -41,6 +40,12 @@ namespace MovieDatabaseBackend.Services
 
         public void CreateMovie(MovieCreateUpdateDto movieDto)
         {
+            // Title is required
+            if (string.IsNullOrWhiteSpace(movieDto.Title))
+            {
+                return;
+            }
+
             var movie = new Movie
             {
                 Title = movieDto.Title,
@@ -55,12 +60,13 @@ namespace MovieDatabaseBackend.Services
                 Writer = GetOrCreatePerson(movieDto.Writer)
             };
 
-            _ = _movieRepository.AddMovie(movie);
+            _ = _uof.Movies.AddMovie(movie);
+            _uof.SaveChanges();
         }
 
         public void UpdateMovie(int id, MovieCreateUpdateDto movieDto)
         {
-            var movie = _movieRepository.GetMovie(id);
+            var movie = _uof.Movies.GetMovie(id);
             if (movie is null)
             {
                 return;
@@ -118,11 +124,13 @@ namespace MovieDatabaseBackend.Services
             // Remove unused entities
             RemoveUnusedGenres(genresToRemove);
             RemoveUnusedPersons(personsToRemove);
+
+            _uof.SaveChanges();
         }
 
         public void DeleteMovie(int id)
         {
-            var movie = _movieRepository.GetMovie(id);
+            var movie = _uof.Movies.GetMovie(id);
             if (movie is null)
             {
                 return;
@@ -162,7 +170,8 @@ namespace MovieDatabaseBackend.Services
             RemoveUnusedPersons(personsToRemove);
             RemoveUnusedGenres(movie.Genres);
 
-            _movieRepository.RemoveMovie(movie);
+            _uof.Movies.RemoveMovie(movie);
+            _uof.SaveChanges();
         }
 
         /// <summary>
@@ -180,11 +189,11 @@ namespace MovieDatabaseBackend.Services
                 .Select(n => n.Trim())
                 .ToList();
 
-            var existingGenres = _genreRepository.GetGenresByName(nameList).ToList();
+            var existingGenres = _uof.Genres.GetGenresByName(nameList).ToList();
             var missingGenreNames = nameList.Except(existingGenres.Select(p => p.Name));
             foreach (var genre in missingGenreNames)
             {
-                existingGenres.Add(_genreRepository.AddGenre(new Genre { Name = genre }));
+                existingGenres.Add(_uof.Genres.AddGenre(new Genre { Name = genre }));
             }
             return existingGenres;
         }
@@ -205,7 +214,7 @@ namespace MovieDatabaseBackend.Services
             else
             {
                 name = name.Trim();
-                return _personRepository.GetPersonByName(name) ?? _personRepository.AddPerson(new Person { Name = name });
+                return _uof.Persons.GetPersonByName(name) ?? _uof.Persons.AddPerson(new Person { Name = name });
             }
         }
 
@@ -222,11 +231,11 @@ namespace MovieDatabaseBackend.Services
                 .Select(n => n.Trim())
                 .ToList();
 
-            var existingPersons = _personRepository.GetPersonsByName(nameList).ToList();
+            var existingPersons = _uof.Persons.GetPersonsByName(nameList).ToList();
             var missingPersonNames = nameList.Except(existingPersons.Select(p => p.Name));
             foreach (var person in missingPersonNames)
             {
-                existingPersons.Add(_personRepository.AddPerson(new Person { Name = person }));
+                existingPersons.Add(_uof.Persons.AddPerson(new Person { Name = person }));
             }
             return existingPersons;
         }
@@ -247,7 +256,7 @@ namespace MovieDatabaseBackend.Services
 
             if (deletable.Count > 0)
             {
-                _genreRepository.RemoveGenres(deletable);
+                _uof.Genres.RemoveGenres(deletable);
             }
         }
 
@@ -267,7 +276,7 @@ namespace MovieDatabaseBackend.Services
 
             if (deletable.Count > 0)
             {
-                _personRepository.RemovePersons(deletable);
+                _uof.Persons.RemovePersons(deletable);
             }
         }
 

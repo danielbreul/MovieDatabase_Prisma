@@ -30,8 +30,8 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
-        [HttpPost("{id:int}")]
-        public IActionResult Post(int id, [FromBody] MovieCreateUpdateDto movieCreateDto)
+        [HttpPost]
+        public IActionResult Post([FromBody] MovieCreateUpdateDto movieCreateDto)
         {
             _service.CreateMovie(movieCreateDto);
             return Ok();

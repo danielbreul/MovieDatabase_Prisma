@@ -1,4 +1,5 @@
-﻿using MovieDatabaseBackend.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MovieDatabaseBackend.Data;
 using MovieDatabaseBackend.Entities;
 
 namespace MovieDatabaseBackend.Repositories
@@ -10,6 +11,10 @@ namespace MovieDatabaseBackend.Repositories
         public IEnumerable<Movie> GetMovies(string? title = null)
         {
             var query = _context.Movies
+                .Include(m => m.Genres)
+                .Include(m => m.Directors)
+                .Include(m => m.LeadActors)
+                .Include(m => m.Writer)
                 .Where(m => title == null || m.Title.Contains(title));
             return query.ToList();
         }
@@ -17,6 +22,10 @@ namespace MovieDatabaseBackend.Repositories
         public Movie? GetMovie(int id)
         {
             return _context.Movies
+                .Include(m => m.Genres)
+                .Include(m => m.Directors)
+                .Include(m => m.LeadActors)
+                .Include(m => m.Writer)
                 .FirstOrDefault(m => m.Id == id);
         }
 

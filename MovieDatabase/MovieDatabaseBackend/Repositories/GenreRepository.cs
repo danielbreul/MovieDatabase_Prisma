@@ -10,7 +10,9 @@ namespace MovieDatabaseBackend.Repositories
 
         public IEnumerable<Genre> GetGenresByName(IEnumerable<string> names)
         {
-            return _context.Genres.Where(g => names.Contains(g.Name));
+            return _context.Genres
+                .Include(p => p.Movies)
+                .Where(g => names.Select(n => n.Trim()).Contains(g.Name));
         }
 
         public Genre AddGenre(Genre genre)
