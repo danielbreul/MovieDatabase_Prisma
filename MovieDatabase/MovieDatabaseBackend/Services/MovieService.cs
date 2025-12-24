@@ -1,7 +1,7 @@
 ﻿using MovieDatabaseBackend.Data;
 using MovieDatabaseBackend.Dtos;
 using MovieDatabaseBackend.Entities;
-using MovieDatabaseBackend.Repositories;
+using MovieDatabaseBackend.Common;
 
 namespace MovieDatabaseBackend.Services
 {
@@ -19,18 +19,7 @@ namespace MovieDatabaseBackend.Services
             var movie = _uof.Movies.GetMovie(id);
             if (movie is not null)
             {
-                return new MovieDetailDto(movie.Id, movie.Title)
-                {
-                    Plot = movie.Plot,
-                    ReleaseDate = movie.ReleaseDate,
-                    Rating = movie.Rating,
-                    AgeRating = movie.AgeRating,
-                    Genres = movie.Genres.Select(g => new GenreDto(g.Id, g.Name)),
-                    Directors = movie.Directors.Select(d => new PersonDto(d.Id, d.Name)),
-                    Writer = movie.Writer is not null ? new PersonDto(movie.Writer.Id, movie.Writer.Name) : null,
-                    LeadActors = movie.LeadActors.Select(a => new PersonDto(a.Id, a.Name)),
-                    Duration = movie.Duration
-                };
+                return MovieToDetailDto(movie);
             }
             else
             {
@@ -38,12 +27,12 @@ namespace MovieDatabaseBackend.Services
             }
         }
 
-        public void CreateMovie(MovieCreateUpdateDto movieDto)
+        public Result<MovieDetailDto?> CreateMovie(MovieCreateUpdateDto movieDto)
         {
             // Title is required
             if (string.IsNullOrWhiteSpace(movieDto.Title))
             {
-                return;
+                return Result<MovieDetailDto?>.Fail("Title is required!");
             }
 
             var movie = new Movie
@@ -62,14 +51,16 @@ namespace MovieDatabaseBackend.Services
 
             _ = _uof.Movies.AddMovie(movie);
             _uof.SaveChanges();
+
+            return Result<MovieDetailDto?>.Ok(MovieToDetailDto(movie));
         }
 
-        public void UpdateMovie(int id, MovieCreateUpdateDto movieDto)
+        public bool UpdateMovie(int id, MovieCreateUpdateDto movieDto)
         {
             var movie = _uof.Movies.GetMovie(id);
             if (movie is null)
             {
-                return;
+                return false;
             }
 
             movie.Title = movieDto.Title;
@@ -126,14 +117,15 @@ namespace MovieDatabaseBackend.Services
             RemoveUnusedPersons(personsToRemove);
 
             _uof.SaveChanges();
+            return true;
         }
 
-        public void DeleteMovie(int id)
+        public bool DeleteMovie(int id)
         {
             var movie = _uof.Movies.GetMovie(id);
             if (movie is null)
             {
-                return;
+                return false;
             }
 
             // Genres
@@ -172,6 +164,30 @@ namespace MovieDatabaseBackend.Services
 
             _uof.Movies.RemoveMovie(movie);
             _uof.SaveChanges();
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Creates a new MovieDetailDto instance that represents the specified movie, including its details, genres,
+        /// directors, writer, and lead actors.
+        /// </summary>
+        /// <param name="movie">The Movie object to convert to a MovieDetailDto. Cannot be null.</param>
+        /// <returns>A MovieDetailDto containing detailed information about the specified movie.</returns>
+        private static MovieDetailDto MovieToDetailDto(Movie movie)
+        {
+            return new MovieDetailDto(movie.Id, movie.Title)
+            {
+                Plot = movie.Plot,
+                ReleaseDate = movie.ReleaseDate,
+                Rating = movie.Rating,
+                AgeRating = movie.AgeRating,
+                Genres = movie.Genres.Select(g => new GenreDto(g.Id, g.Name)),
+                Directors = movie.Directors.Select(d => new PersonDto(d.Id, d.Name)),
+                Writer = movie.Writer is not null ? new PersonDto(movie.Writer.Id, movie.Writer.Name) : null,
+                LeadActors = movie.LeadActors.Select(a => new PersonDto(a.Id, a.Name)),
+                Duration = movie.Duration
+            };
         }
 
         /// <summary>

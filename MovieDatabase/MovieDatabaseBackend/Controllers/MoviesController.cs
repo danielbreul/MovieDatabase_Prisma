@@ -13,14 +13,22 @@ namespace MovieDatabaseBackend.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<MovieDto>> Get()
         {
-            return Ok(_service.GetMovies());
+            var movies = _service.GetMovies();
+            if (movies.Any())
+            {
+                return Ok(movies);
+            }
+            else
+            {
+                return NoContent();
+            }
         }
 
         [HttpGet("{id:int}")]
         public ActionResult<MovieDetailDto> Get(int id)
         {
             var movie = _service.GetMovie(id);
-            if (movie != null)
+            if (movie is not null)
             {
                 return Ok(movie);
             }
@@ -33,22 +41,41 @@ namespace MovieDatabaseBackend.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] MovieCreateUpdateDto movieCreateDto)
         {
-            _service.CreateMovie(movieCreateDto);
-            return Ok();
+            var createdMovieDto = _service.CreateMovie(movieCreateDto);
+            if (createdMovieDto.Success)
+            {
+                return Created("/movies/" + createdMovieDto.Value.Id, createdMovieDto.Value);
+            }
+            else
+            {
+                return BadRequest(createdMovieDto.Error);
+            }
         }
 
         [HttpPut("{id:int}")]
         public IActionResult Put(int id, [FromBody] MovieCreateUpdateDto movieUpdateDto)
         {
-            _service.UpdateMovie(id, movieUpdateDto);
-            return Ok();
+            if (_service.UpdateMovie(id, movieUpdateDto))
+            {
+                return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
         }
 
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
-            _service.DeleteMovie(id);
-            return NoContent();
+            if (_service.DeleteMovie(id))
+            {
+                return NoContent();
+            }
+            else
+            {
+                return NotFound();
+            }
         }
     }
 }
