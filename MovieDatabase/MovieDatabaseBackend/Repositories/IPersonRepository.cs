@@ -4,6 +4,7 @@ namespace MovieDatabaseBackend.Repositories
 {
     public interface IPersonRepository
     {
+        public Person? GetPersonById(int id);
         public Person? GetPersonByName(string names);
         public IEnumerable<Person> GetPersonsByName(IEnumerable<string> names);
         public Person AddPerson(Person person);

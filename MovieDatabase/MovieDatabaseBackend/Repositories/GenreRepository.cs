@@ -8,6 +8,13 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
+        public Genre? GetGenreById(int id)
+        {
+            return _context.Genres
+                .Include(p => p.Movies)
+                .FirstOrDefault(g => g.Id == id);
+        }
+
         public IEnumerable<Genre> GetGenresByName(IEnumerable<string> names)
         {
             return _context.Genres

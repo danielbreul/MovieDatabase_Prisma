@@ -8,6 +8,15 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
+        public Person? GetPersonById(int id)
+        {
+            return _context.Persons
+                .Include(p => p.DirectedMovies)
+                .Include(p => p.ActedInMovies)
+                .Include(p => p.WrittenMovies)
+                .FirstOrDefault(p => id == p.Id);
+        }
+
         public Person? GetPersonByName(string name)
         {
             return _context.Persons
