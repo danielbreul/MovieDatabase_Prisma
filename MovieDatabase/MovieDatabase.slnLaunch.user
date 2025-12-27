@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "MovieDatabaseBackend\\MovieDatabaseBackend.csproj",
+        "Action": "StartWithoutDebugging"
+      },
+      {
+        "Path": "MovieDatabaseFrontend\\MovieDatabaseFrontend.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
