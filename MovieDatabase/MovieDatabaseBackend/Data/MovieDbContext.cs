@@ -1,5 +1,5 @@
-﻿using MovieDatabaseBackend.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using MovieDatabaseBackend.Entities;
 
 namespace MovieDatabaseBackend.Data
 {
@@ -15,7 +15,7 @@ namespace MovieDatabaseBackend.Data
                 .HasMany(m => m.Directors)
                 .WithMany(p => p.DirectedMovies);
             modelBuilder.Entity<Movie>()
-                .HasMany(m => m.LeadActors)
+                .HasMany(m => m.Actors)
                 .WithMany(p => p.ActedInMovies);
             modelBuilder.Entity<Movie>()
                 .HasOne(m => m.Writer)

@@ -11,7 +11,7 @@
         public IEnumerable<GenreDto> Genres { get; set; } = [];
         public IEnumerable<PersonDto> Directors { get; set; } = [];
         public PersonDto? Writer { get; set; }
-        public IEnumerable<PersonDto> LeadActors { get; set; } = [];
+        public IEnumerable<PersonDto> Actors { get; set; } = [];
         public int? Duration { get; set; }
     }
 }

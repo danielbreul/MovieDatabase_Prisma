@@ -4,9 +4,10 @@ namespace MovieDatabaseBackend.Repositories
 {
     public interface IGenreRepository
     {
-        public Genre? GetGenreById(int id);
-        public IEnumerable<Genre> GetGenresByName(IEnumerable<string> names);
+        public IQueryable<Genre> GetGenres();
+        public IQueryable<Genre> GetGenresByIds(IEnumerable<int> ids);
+        public Genre? GetGenre(int id);
         public Genre AddGenre(Genre genre);
-        public void RemoveGenres(IEnumerable<Genre> genres);
+        public void RemoveGenre(Genre genre);
     }
 }

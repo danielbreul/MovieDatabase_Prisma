@@ -4,10 +4,10 @@ namespace MovieDatabaseBackend.Repositories
 {
     public interface IPersonRepository
     {
-        public Person? GetPersonById(int id);
-        public Person? GetPersonByName(string names);
-        public IEnumerable<Person> GetPersonsByName(IEnumerable<string> names);
+        public IQueryable<Person> GetPersons();
+        public IQueryable<Person> GetPersonsByIds(IEnumerable<int> ids);
+        public Person? GetPerson(int id);
         public Person AddPerson(Person person);
-        public void RemovePersons(IEnumerable<Person> persons);
+        public void RemovePerson(Person person);
     }
 }

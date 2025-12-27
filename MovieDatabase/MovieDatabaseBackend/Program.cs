@@ -14,7 +14,10 @@ builder.Services.AddOpenApiDocument(config =>
 });
 
 builder.Services.AddDbContext<MovieDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("MovieDb")));
+{
+    var dbPath = Path.Combine(builder.Environment.ContentRootPath, "movie.db");
+    options.UseSqlite($"Data Source={dbPath};Foreign Keys=True");
+});
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IMovieService, MovieService>();
@@ -26,6 +29,13 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 
 var app = builder.Build();
 
+// Initialize db and/or apply migrations at startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
+    db.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -33,8 +43,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUi();
 }
 
-app.UseHttpsRedirection();
-app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

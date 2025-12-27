@@ -4,7 +4,7 @@ namespace MovieDatabaseBackend.Repositories
 {
     public interface IMovieRepository
     {
-        public IEnumerable<Movie> GetMovies(string? title);
+        public IQueryable<Movie> GetMovies(string? title);
         public Movie? GetMovie(int id);
         public Movie AddMovie(Movie movie);
         public void RemoveMovie(Movie movie);

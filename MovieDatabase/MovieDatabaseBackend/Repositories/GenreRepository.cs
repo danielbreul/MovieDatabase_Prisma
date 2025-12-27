@@ -8,18 +8,23 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
-        public Genre? GetGenreById(int id)
+        public IQueryable<Genre> GetGenres()
         {
             return _context.Genres
-                .Include(p => p.Movies)
-                .FirstOrDefault(g => g.Id == id);
+                .Include(p => p.Movies);
         }
 
-        public IEnumerable<Genre> GetGenresByName(IEnumerable<string> names)
+        public IQueryable<Genre> GetGenresByIds(IEnumerable<int> ids)
         {
             return _context.Genres
-                .Include(p => p.Movies)
-                .Where(g => names.Select(n => n.Trim()).Contains(g.Name));
+                .Where(g => ids.Contains(g.Id));
+        }
+
+        public Genre? GetGenre(int id)
+        {
+            return _context.Genres
+                .Include(g => g.Movies)
+                .FirstOrDefault(g => g.Id == id);
         }
 
         public Genre AddGenre(Genre genre)
@@ -27,9 +32,9 @@ namespace MovieDatabaseBackend.Repositories
             return _context.Genres.Add(genre).Entity;
         }
 
-        public void RemoveGenres(IEnumerable<Genre> genres)
+        public void RemoveGenre(Genre genre)
         {
-            _context.Genres.RemoveRange(genres);
+            _context.Genres.Remove(genre);
         }
     }
 }

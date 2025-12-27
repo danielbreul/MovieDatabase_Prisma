@@ -2,17 +2,30 @@
 
 namespace MovieDatabaseBackend.Common
 {
-    public class Result<T>
+    public enum ResultState
+    {
+        Success,
+        NotFound,
+        Referenced,
+        InvalidDto,
+        Failure
+    }
+
+    public class Result
+    {
+        public string? Error { get; protected init; }
+        public ResultState State { get; protected init; }
+        public virtual bool IsSucceed => State == ResultState.Success;
+        public static Result Ok() => new() { State = ResultState.Success };
+        public static Result Fail(ResultState state = ResultState.Failure, string? error = null) => new() { State = state, Error = error };
+    }
+
+    public class Result<T> : Result
     {
         public T? Value { get; private init; }
-
-        public string? Error { get; private init; }
-
         [MemberNotNullWhen(true, nameof(Value))]
-        [MemberNotNullWhen(false, nameof(Error))]
-        public bool Success { get; private init; }
-
-        public static Result<T> Ok(T value) => new() { Value = value, Success = true };
-        public static Result<T> Fail(string error) => new() { Success = false, Error = error };
+        public override bool IsSucceed => State == ResultState.Success;
+        public static Result<T> Ok(T value) => new() { Value = value, State = ResultState.Success };
+        public static new Result<T> Fail(ResultState state = ResultState.Failure, string? error = null) => new() { State = state, Error = error };
     }
 }

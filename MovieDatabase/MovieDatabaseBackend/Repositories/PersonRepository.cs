@@ -8,31 +8,34 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
-        public Person? GetPersonById(int id)
+        public IQueryable<int> FilterExistingPersonIds(IEnumerable<int> ids)
         {
             return _context.Persons
-                .Include(p => p.DirectedMovies)
-                .Include(p => p.ActedInMovies)
-                .Include(p => p.WrittenMovies)
-                .FirstOrDefault(p => id == p.Id);
+                .Where(g => ids.Contains(g.Id))
+                .Select(g => g.Id);
         }
 
-        public Person? GetPersonByName(string name)
+        public IQueryable<Person> GetPersonsByIds(IEnumerable<int> ids)
         {
             return _context.Persons
-                .Include(p => p.DirectedMovies)
-                .Include(p => p.ActedInMovies)
-                .Include(p => p.WrittenMovies)
-                .FirstOrDefault(p => name.Trim() == p.Name);
+                .Where(g => ids.Contains(g.Id));
         }
 
-        public IEnumerable<Person> GetPersonsByName(IEnumerable<string> names)
+        public IQueryable<Person> GetPersons()
+        {
+            return _context.Persons
+                .Include(p => p.DirectedMovies)
+                .Include(p => p.ActedInMovies)
+                .Include(p => p.WrittenMovies);
+        }
+
+        public Person? GetPerson(int id)
         {
             return _context.Persons
                 .Include(p => p.DirectedMovies)
                 .Include(p => p.ActedInMovies)
                 .Include(p => p.WrittenMovies)
-                .Where(p => names.Select(n => n.Trim()).Contains(p.Name));
+                .FirstOrDefault(p => p.Id == id);
         }
 
         public Person AddPerson(Person person)
@@ -40,9 +43,9 @@ namespace MovieDatabaseBackend.Repositories
             return _context.Persons.Add(person).Entity;
         }
 
-        public void RemovePersons(IEnumerable<Person> persons)
+        public void RemovePerson(Person person)
         {
-            _context.Persons.RemoveRange(persons);
+            _context.Persons.Remove(person);
         }
     }
 }
