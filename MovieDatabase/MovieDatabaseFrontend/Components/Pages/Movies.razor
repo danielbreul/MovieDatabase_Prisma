@@ -1,0 +1,58 @@
+﻿@page "/"
+@inject IMovieService MovieService
+@rendermode InteractiveServer
+
+<h1>Movies</h1>
+
+<Table Striped>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>Title</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @if (AllMovies is not null)
+        {
+            if (AllMovies.Any())
+            {
+                foreach (var movie in AllMovies)
+                {
+                    <TableRow>
+                        <TableRowCell>@movie.Title</TableRowCell>
+                    </TableRow>
+                }
+            }
+            else
+            {
+                <TableRow>
+                    <TableRowCell>No movies available.</TableRowCell>
+                </TableRow>
+            }
+        }
+        else
+        {
+            <TableRow>
+                <TableRowCell>Loading ...</TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>
+
+@code {
+    IEnumerable<Movie>? AllMovies = null;
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync called.");
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("OnAfterRenderAsync called.");
+        if (firstRender)
+        {
+            Console.WriteLine("Fetching movies...");
+            AllMovies = await MovieService.GetMoviesAsync();
+            Console.WriteLine($"Fetched {AllMovies.Count()} movies.");
+            StateHasChanged();
+        }
+    }
+}

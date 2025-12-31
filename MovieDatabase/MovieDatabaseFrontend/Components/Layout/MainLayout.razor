@@ -1,0 +1,29 @@
+﻿@inherits LayoutComponentBase
+
+<Layout>
+
+    <LayoutHeader Fixed>
+
+        <Bar>
+            <BarBrand>Film Datenbank</BarBrand>
+            <BarMenu>
+                <BarStart>
+                    <BarItem>
+                        <NavLink href="" Match="NavLinkMatch.All">Movies</NavLink>
+                    </BarItem>
+                    <BarItem>
+                        <NavLink href="genres">Genres</NavLink>
+                    </BarItem>
+                    <BarItem>
+                        <NavLink href="persons">Persons</NavLink>
+                    </BarItem>
+                </BarStart>
+            </BarMenu>
+        </Bar>
+    </LayoutHeader>
+
+    <LayoutContent>
+        @Body
+    </LayoutContent>
+
+</Layout>
