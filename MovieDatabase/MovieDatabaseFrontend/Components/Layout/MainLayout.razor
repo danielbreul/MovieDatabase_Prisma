@@ -1,29 +1,38 @@
 ﻿@inherits LayoutComponentBase
 
-<Layout>
+<Blazorise.ThemeProvider Theme="@theme">
+    <Layout>
+        <LayoutHeader Fixed>
+            <Bar Background="Background.Primary" ThemeContrast="ThemeContrast.Dark" Mode="BarMode.Horizontal" Breakpoint="Breakpoint.Desktop">
+                <BarBrand Margin="Margin.Is4.OnX">Film Datenbank</BarBrand>
+                <BarToggler />
+                <BarMenu>
+                    <BarStart>
+                        <BarItem>
+                            <BarLink href="" Match="Match.All">Movies</BarLink>
+                        </BarItem>
+                        <BarItem>
+                            <BarLink href="genres" Match="Match.Prefix">Genres</BarLink>
+                        </BarItem>
+                        <BarItem>
+                            <BarLink href="persons" Match="Match.Prefix">Persons</BarLink>
+                        </BarItem>
+                    </BarStart>
+                </BarMenu>
+            </Bar>
+        </LayoutHeader>
+        <LayoutContent Margin="Margin.Is4.OnAll">
+            @Body
+        </LayoutContent>
+    </Layout>
+</Blazorise.ThemeProvider>
 
-    <LayoutHeader Fixed>
-
-        <Bar>
-            <BarBrand>Film Datenbank</BarBrand>
-            <BarMenu>
-                <BarStart>
-                    <BarItem>
-                        <NavLink href="" Match="NavLinkMatch.All">Movies</NavLink>
-                    </BarItem>
-                    <BarItem>
-                        <NavLink href="genres">Genres</NavLink>
-                    </BarItem>
-                    <BarItem>
-                        <NavLink href="persons">Persons</NavLink>
-                    </BarItem>
-                </BarStart>
-            </BarMenu>
-        </Bar>
-    </LayoutHeader>
-
-    <LayoutContent>
-        @Body
-    </LayoutContent>
-
-</Layout>
+@code{
+    private Theme theme = new Theme
+    {
+        BackgroundOptions = new ThemeBackgroundOptions
+        {
+            Primary = "#1B263B"
+        }
+    };
+}
