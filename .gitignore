@@ -56,5 +56,7 @@ nunit-*.xml
 # .vs
 MovieDatabase/.vs
 
-# Database file
+# Database files
 *.db
+*.db-wal
+*.db-shm
