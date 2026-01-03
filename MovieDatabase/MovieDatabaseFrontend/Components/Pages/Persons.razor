@@ -1,7 +1,227 @@
 ﻿@page "/persons"
+@inject IPersonService PersonService
+@rendermode InteractiveServer
 
-<h3>Persons</h3>
+<PageTitle>Persons</PageTitle>
 
-@code {
+<Heading>Persons</Heading>
+
+<Button Color="Color.Primary" Clicked="CreatePerson">
+    <Icon Name="IconName.Add" />
+    Neue Person
+</Button>
+
+<Table Striped>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>Name</TableHeaderCell>
+            <TableHeaderCell TextAlignment="TextAlignment.Center">Bearbeiten</TableHeaderCell>
+            <TableHeaderCell TextAlignment="TextAlignment.Center">Löschen</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @if (allPersons is not null)
+        {
+            if (allPersons.Any())
+            {
+                foreach (var person in allPersons)
+                {
+                    <TableRow>
+                        <TableRowCell>@person.Name</TableRowCell>
+                        <TableRowCell TextAlignment="TextAlignment.Center">
+                            <Button Color="Color.Secondary" Size="Size.Small" Clicked="@(() => EditPerson(person))" @onclick:stopPropagation>
+                                <Icon Name="IconName.Edit" />
+                            </Button>
+                        </TableRowCell>
+                        <TableRowCell TextAlignment="TextAlignment.Center">
+                            <Button Color="Color.Primary" Size="Size.Small" Clicked="@(() => DeletePerson(person))" @onclick:stopPropagation>
+                                <Icon Name="IconName.Delete" />
+                            </Button>
+                        </TableRowCell>
+                    </TableRow>
+                }
+            }
+            else
+            {
+                <TableRow>
+                    <TableRowCell>Es sind keine Personen vorhanden.</TableRowCell>
+                </TableRow>
+            }
+        }
+        else
+        {
+            <TableRow>
+                <TableRowCell>Personen werden geladen ...</TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>
+
+<Modal @ref="personModal" Closing="OnPersonModalClosing">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>
+                @(personModalMode == PenreModalMode.Create ? "Neue Person erstellen" : "Person bearbeiten")
+            </ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+            <Validation @ref="validation" Validator="ValidationRule.IsNotEmpty">
+                <Field Horizontal>
+                    <FieldLabel RequiredIndicator ColumnSize="ColumnSize.Is2">Name</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is5">
+                        <TextEdit @bind-Text="editingPerson">
+                            <Feedback>
+                                <ValidationError>Name ist erforderlich.</ValidationError>
+                            </Feedback>
+                        </TextEdit>
+                    </FieldBody>
+                </Field>
+            </Validation>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="AbortPersonModal">Abbrechen</Button>
+            <Button Color="Color.Primary" Clicked="SavePerson">Speichern</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Warning @ref="discardWarning"
+         WarningTitle="Änderungen verwerfen?"
+         WarningMessage="Möchten Sie die Änderungen wirklich verwerfen?"
+         ConfirmButtonText="Änderungen verwerfen" />
+
+<Warning @ref="deleteWarning"
+         WarningTitle="Person löschen?"
+         WarningMessage='@("Möchten Sie die Person \"" + deletingPerson + "\" wirklich unwiderruflich löschen?")'
+         ConfirmButtonText="Person löschen" />
+
+@code
+{
+    private List<PersonViewModel> allPersons = [];
+
+    #region Lifecycle
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync called.");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("OnAfterRenderAsync called.");
+        if (firstRender)
+        {
+            allPersons = (await PersonService.GetPersonsAsync()).ToList();
+            StateHasChanged();
+        }
+    }
+
+    #endregion
+
+    #region Person Modal
+
+    private Modal personModal = null!;
+    private Validation? validation;
+    private PenreModalMode personModalMode;
+    private bool cancelClose;
+    private PersonViewModel? selectedPerson;
+    private string editingPerson = string.Empty;
+
+    private enum PenreModalMode
+    {
+        Create,
+        Edit
+    }
+
+    private async Task CreatePerson()
+    {
+        editingPerson = string.Empty;
+        personModalMode = PenreModalMode.Create;
+        cancelClose = true;
+        await personModal.Show();
+    }
+
+    private async Task EditPerson(PersonViewModel person)
+    {
+        selectedPerson = person;
+        editingPerson = person.Name;
+        personModalMode = PenreModalMode.Edit;
+        cancelClose = true;
+        await personModal.Show();
+    }
+
+    private Task OnPersonModalClosing(ModalClosingEventArgs e)
+    {
+        e.Cancel = cancelClose;
+        return Task.CompletedTask;
+    }
+
+    private async Task ClosePersonModalAsync()
+    {
+        cancelClose = false;
+        await personModal.Hide();
+        selectedPerson = null;
+        editingPerson = string.Empty;
+    }
+
+    private async Task SavePerson()
+    {
+        if (validation?.Status == ValidationStatus.Success)
+        {
+            if (personModalMode == PenreModalMode.Create)
+            {
+                var newPerson = await PersonService.CreatePersonAsync(new PersonViewModel { Name = editingPerson });
+                if (newPerson is not null)
+                {
+                    allPersons.Add(newPerson);
+                    StateHasChanged();
+                }
+            }
+            else if (selectedPerson is not null && personModalMode == PenreModalMode.Edit)
+            {
+                if (await PersonService.UpdatePersonAsync(new PersonViewModel { Id = selectedPerson.Id, Name = editingPerson }))
+                {
+                    selectedPerson.Name = editingPerson;
+                    StateHasChanged();
+                }
+            }
+        }
+        await ClosePersonModalAsync();
+    }
+
+    #endregion
+
+    #region Delete Warning
+
+    private Warning deleteWarning = null!;
+    private string deletingPerson = string.Empty;
+
+    private Task DeletePerson(PersonViewModel person)
+    {
+        deletingPerson = person.Name;
+        deleteWarning.Show(async () =>
+        {
+            if (await PersonService.DeletePersonAsync(person))
+            {
+                allPersons.Remove(person);
+                StateHasChanged();
+            }
+        });
+        return Task.CompletedTask;
+    }
+
+    #endregion
+
+    #region Discard Warning
+
+    private Warning discardWarning = null!;
+
+    private Task AbortPersonModal()
+    {
+        discardWarning.Show(ClosePersonModalAsync);
+        return Task.CompletedTask;
+    }
+
+    #endregion
 
 }

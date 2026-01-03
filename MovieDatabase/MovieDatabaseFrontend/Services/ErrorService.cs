@@ -4,9 +4,13 @@
     {
         public event Action<string>? OnError;
 
-        public void LogHttpResponse(HttpResponseMessage response)
+        public void LogHttpResponse(HttpResponseMessage response, string? message = null)
         {
-            OnError?.Invoke("Unerwartete HTTP-Response. Statuscode: " + response.StatusCode + "\nInhalt: " + response.RequestMessage);
+            if (message is not null)
+            {
+                message = "Nachricht: " + message + "\n";
+            }
+            OnError?.Invoke("Unerwartete HTTP-Response.\n" + message + "Statuscode: " + response.StatusCode + "\nInhalt: " + response.RequestMessage);
         }
 
         public void LogMessage(string message)
@@ -16,7 +20,7 @@
 
         public void LogError(Exception ex)
         {
-            OnError?.Invoke("Unerwartete Exception: " + ex.Message);
+            OnError?.Invoke("Unerwartete Exception: " + ex.Message + "type: " + ex.GetType());
         }
     }
 }

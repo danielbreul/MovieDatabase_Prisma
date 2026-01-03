@@ -1,9 +1,12 @@
-﻿﻿@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 
 <Blazorise.ThemeProvider Theme="@theme">
     <Layout>
         <LayoutHeader Fixed>
-            <Bar Background="Background.Primary" ThemeContrast="ThemeContrast.Dark" Mode="BarMode.Horizontal" Breakpoint="Breakpoint.Desktop">
+            <Bar Background="Background.Primary"
+                 ThemeContrast="ThemeContrast.Dark"
+                 Mode="BarMode.Horizontal"
+                 Breakpoint="Breakpoint.Desktop">
                 <BarBrand Margin="Margin.Is4.OnX">
                     <BarLink href="">Film Datenbank</BarLink>
                 </BarBrand>
@@ -24,13 +27,13 @@
             </Bar>
         </LayoutHeader>
         <LayoutContent Margin="Margin.Is4.OnAll">
-            @Body
             <Error />
+            @Body
         </LayoutContent>
     </Layout>
 </Blazorise.ThemeProvider>
 
-@code{
+@code {
     private Theme theme = new Theme
     {
         BackgroundOptions = new ThemeBackgroundOptions

@@ -9,12 +9,16 @@ namespace MovieDatabaseFrontend.Services
         private readonly HttpClient httpClient = httpClient;
         private readonly IErrorService errorService = errorService;
 
-        public async Task<IEnumerable<MovieViewModel>> GetMoviesAsync()
+        public async Task<IEnumerable<MovieViewModel>> GetMoviesAsync(string? title = null)
         {
             IEnumerable<MovieDto>? moviesDto = null;
             try
             {
-                var response = await httpClient.GetAsync("http://localhost:5172/movies");
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    title = "/search?title=" + WebUtility.UrlEncode(title);
+                }
+                var response = await httpClient.GetAsync("http://localhost:5172/movies" + title);
                 if (response.IsSuccessStatusCode)
                 {
                     moviesDto = await response.Content.ReadFromJsonAsync<IEnumerable<MovieDto>>();
@@ -24,10 +28,15 @@ namespace MovieDatabaseFrontend.Services
                     errorService.LogHttpResponse(response);
                 }
             }
+            catch (HttpRequestException e)
+            {
+                errorService.LogMessage("Die Verbindung zum Backend ist unterbrochen: " + e.Message);
+            }
             catch (Exception e)
             {
                 errorService.LogError(e);
             }
+
             return moviesDto?.Select(x => new MovieViewModel { Id = x.Id, Title = x.Title }) ?? [];
         }
 
@@ -46,28 +55,18 @@ namespace MovieDatabaseFrontend.Services
                     errorService.LogHttpResponse(response);
                 }
             }
+            catch (HttpRequestException e)
+            {
+                errorService.LogMessage("Die Verbindung zum Backend ist unterbrochen: " + e.Message);
+            }
             catch (Exception e)
             {
                 errorService.LogError(e);
             }
+
             if (movieDetailDto is not null)
             {
-                return new MovieDetailViewModel
-                {
-                    Id = movieDetailDto.Id,
-                    Title = movieDetailDto.Title,
-                    Plot = movieDetailDto.Plot,
-                    ReleaseDate = movieDetailDto.ReleaseDate,
-                    Rating = movieDetailDto.Rating,
-                    AgeRating = movieDetailDto.AgeRating,
-                    Genres = movieDetailDto.Genres.Select(g => new GenreViewModel { Id = g.Id, Name = g.Name }),
-                    Directors = movieDetailDto.Directors.Select(p => new PersonViewModel { Id = p.Id, Name = p.Name }),
-                    Writer = movieDetailDto.Writer is not null
-                        ? new PersonViewModel { Id = movieDetailDto.Writer.Id, Name = movieDetailDto.Writer.Name }
-                        : null,
-                    Actors = movieDetailDto.Actors.Select(p => new PersonViewModel { Id = p.Id, Name = p.Name }),
-                    Duration = movieDetailDto.Duration,
-                };
+                return MovieDtoToViewModel(movieDetailDto);
             }
             else
             {
@@ -75,25 +74,12 @@ namespace MovieDatabaseFrontend.Services
             }
         }
 
-        public async Task<MovieDetailViewModel> CreateMovieAsync(MovieDetailViewModel movie)
+        public async Task<MovieViewModel?> CreateMovieAsync(MovieDetailViewModel movie)
         {
-            var movieDto = new MovieCreateUpdateDto
-            {
-                Title = movie.Title,
-                Plot = movie.Plot,
-                ReleaseDate = movie.ReleaseDate,
-                Rating = movie.Rating,
-                AgeRating = movie.AgeRating,
-                Genres = movie.Genres.Select(g => g.Id),
-                Directors = movie.Directors.Select(p => p.Id),
-                Writer = movie.Writer?.Id,
-                Actors = movie.Actors.Select(p => p.Id),
-                Duration = movie.Duration
-            };
             MovieDetailDto? createdMovieDetailDto = null;
             try
             {
-                var response = await httpClient.PostAsJsonAsync("http://localhost:5172/movies/", movieDto);
+                var response = await httpClient.PostAsJsonAsync("http://localhost:5172/movies/", MovieViewModelToDto(movie));
                 if (response.IsSuccessStatusCode)
                 {
                     createdMovieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
@@ -107,33 +93,37 @@ namespace MovieDatabaseFrontend.Services
                     errorService.LogHttpResponse(response);
                 }
             }
+            catch (HttpRequestException e)
+            {
+                errorService.LogMessage("Die Verbindung zum Backend ist unterbrochen: " + e.Message);
+            }
             catch (Exception e)
             {
                 errorService.LogError(e);
+            }
+
+            if (createdMovieDetailDto is not null)
+            {
+                return new MovieViewModel { Id = createdMovieDetailDto.Id, Title = createdMovieDetailDto.Title };
+            }
+            else
+            {
+                return null;
             }
         }
 
         public async Task<bool> UpdateMovieAsync(MovieDetailViewModel movie)
         {
-            var movieDto = new MovieCreateUpdateDto
-            {
-                Title = movie.Title,
-                Plot = movie.Plot,
-                ReleaseDate = movie.ReleaseDate,
-                Rating = movie.Rating,
-                AgeRating = movie.AgeRating,
-                Genres = movie.Genres.Select(g => g.Id),
-                Directors = movie.Directors.Select(p => p.Id),
-                Writer = movie.Writer?.Id,
-                Actors = movie.Actors.Select(p => p.Id),
-                Duration = movie.Duration
-            };
             try
             {
-                var response = await httpClient.PutAsJsonAsync("http://localhost:5172/movies/" + movie.Id, movieDto);
+                var response = await httpClient.PutAsJsonAsync("http://localhost:5172/movies/" + movie.Id, MovieViewModelToDto(movie));
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Der Film konnte nicht bearbeitet werden, da er in der Datenbank nicht existiert.");
+                }
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    errorService.LogHttpResponse(response, "Der Film enthält fehlerhafte Daten und konnte deshalb nicht gespeichert werden.");
                 }
                 else if (!response.IsSuccessStatusCode)
                 {
@@ -143,6 +133,10 @@ namespace MovieDatabaseFrontend.Services
                 {
                     return true;
                 }
+            }
+            catch (HttpRequestException e)
+            {
+                errorService.LogMessage("Die Verbindung zum Backend ist unterbrochen: " + e.Message);
             }
             catch (Exception e)
             {
@@ -169,11 +163,53 @@ namespace MovieDatabaseFrontend.Services
                     return true;
                 }
             }
+            catch (HttpRequestException e)
+            {
+                errorService.LogMessage("Die Verbindung zum Backend ist unterbrochen: " + e.Message);
+            }
             catch (Exception e)
             {
                 errorService.LogError(e);
             }
             return false;
         }
+
+        private MovieCreateUpdateDto MovieViewModelToDto(MovieDetailViewModel movie)
+        {
+            return new MovieCreateUpdateDto
+            {
+                Title = movie.Title,
+                Plot = movie.Plot,
+                ReleaseDate = movie.ReleaseDate,
+                Rating = movie.Rating,
+                AgeRating = movie.AgeRating,
+                Genres = movie.Genres.Select(g => g.Id),
+                Directors = movie.Directors.Select(p => p.Id),
+                Writer = movie.Writer?.Id,
+                Actors = movie.Actors.Select(p => p.Id),
+                Duration = movie.Duration
+            };
+        }
+
+        private MovieDetailViewModel MovieDtoToViewModel(MovieDetailDto movie)
+        {
+            return new MovieDetailViewModel
+            {
+                Id = movie.Id,
+                Title = movie.Title,
+                Plot = movie.Plot,
+                ReleaseDate = movie.ReleaseDate,
+                Rating = movie.Rating,
+                AgeRating = movie.AgeRating,
+                Genres = movie.Genres.Select(g => new GenreViewModel { Id = g.Id, Name = g.Name }),
+                Directors = movie.Directors.Select(p => new PersonViewModel { Id = p.Id, Name = p.Name }),
+                Writer = movie.Writer is not null
+                       ? new PersonViewModel { Id = movie.Writer.Id, Name = movie.Writer.Name }
+                       : null,
+                Actors = movie.Actors.Select(p => new PersonViewModel { Id = p.Id, Name = p.Name }),
+                Duration = movie.Duration,
+            };
+        }
+
     }
 }
