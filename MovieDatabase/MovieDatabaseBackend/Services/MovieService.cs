@@ -14,7 +14,7 @@ namespace MovieDatabaseBackend.Services
             var movies = _uof.Movies.GetMovies(title);
             if (movies.Any())
             {
-                return Result<IEnumerable<MovieDto>>.Ok(movies.Select(x => new MovieDto(x.Id, x.Title)));
+                return Result<IEnumerable<MovieDto>>.Ok(movies.Select(m => new MovieDto { Id = m.Id, Title = m.Title }));
             }
             else
             {
@@ -118,16 +118,18 @@ namespace MovieDatabaseBackend.Services
         /// <returns>A MovieDetailDto containing detailed information about the specified movie.</returns>
         private static MovieDetailDto MovieToDetailDto(Movie movie)
         {
-            return new MovieDetailDto(movie.Id, movie.Title)
+            return new MovieDetailDto
             {
+                Id = movie.Id,
+                Title = movie.Title,
                 Plot = movie.Plot,
                 ReleaseDate = movie.ReleaseDate,
                 Rating = movie.Rating,
                 AgeRating = movie.AgeRating,
-                Genres = movie.Genres.Select(g => new GenreDto(g.Id, g.Name)),
-                Directors = movie.Directors.Select(d => new PersonDto(d.Id, d.Name)),
-                Writer = movie.Writer is not null ? new PersonDto(movie.Writer.Id, movie.Writer.Name) : null,
-                Actors = movie.Actors.Select(a => new PersonDto(a.Id, a.Name)),
+                Genres = movie.Genres.Select(g => new GenreDto { Id = g.Id, Name = g.Name }),
+                Directors = movie.Directors.Select(p => new PersonDto { Id = p.Id, Name = p.Name }),
+                Writer = movie.Writer is not null ? new PersonDto { Id = movie.Writer.Id, Name = movie.Writer.Name } : null,
+                Actors = movie.Actors.Select(p => new PersonDto { Id = p.Id, Name = p.Name }),
                 Duration = movie.Duration
             };
         }

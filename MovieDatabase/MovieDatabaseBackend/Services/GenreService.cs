@@ -18,7 +18,7 @@ namespace MovieDatabaseBackend.Services
             }
             else
             {
-                return Result<IEnumerable<GenreDto>>.Ok(genres.Select(m => new GenreDto(m.Id, m.Name)));
+                return Result<IEnumerable<GenreDto>>.Ok(genres.Select(g => new GenreDto { Id = g.Id, Name = g.Name }));
             }
         }
 
@@ -38,7 +38,7 @@ namespace MovieDatabaseBackend.Services
             _uof.Genres.AddGenre(genre);
             _uof.SaveChanges();
 
-            return Result<GenreDto?>.Ok(new GenreDto(genre.Id, genre.Name));
+            return Result<GenreDto?>.Ok(new GenreDto { Id = genre.Id, Name = genre.Name });
         }
 
         public Result UpdateGenre(int id, GenreCreateUpdateDto genreDto)
@@ -84,7 +84,7 @@ namespace MovieDatabaseBackend.Services
             var genre = _uof.Genres.GetGenre(genreId);
             if (genre is not null)
             {
-                var movies = genre.Movies.Select(m => new MovieDto(m.Id, m.Title));
+                var movies = genre.Movies.Select(m => new MovieDto { Id = m.Id, Title = m.Title });
                 if (movies.Any())
                 {
                     return Result<IEnumerable<MovieDto>>.Ok(movies);

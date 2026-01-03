@@ -2,8 +2,8 @@
 {
     public class Movie
     {
-        public required int Id { get; set; }
-        public required string Title { get; set; }
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Plot { get; set; }
         public DateTime? ReleaseDate { get; set; }
         public int? Rating { get; set; }
