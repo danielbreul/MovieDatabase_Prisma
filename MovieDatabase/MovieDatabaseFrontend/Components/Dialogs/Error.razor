@@ -1,0 +1,36 @@
+﻿@implements IDisposable
+@inject IErrorService ErrorService
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <Alert Color="Color.Danger" Visible>
+        <AlertMessage>Fehler</AlertMessage>
+        <AlertDescription>@errorMessage</AlertDescription>
+        <CloseButton Clicked="() => errorMessage = null"/>
+    </Alert>
+}
+
+@code {
+
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        ErrorService.OnError += HandleError;
+    }
+
+    private void HandleError(string message)
+    {
+        errorMessage = message;
+    }
+
+    private void CloseError()
+    {
+        errorMessage = null;
+    }
+
+    public void Dispose()
+    {
+        ErrorService.OnError -= HandleError;
+    }
+}

@@ -19,6 +19,9 @@ builder.Services
     .AddFontAwesomeIcons();
 
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<IErrorService, ErrorService>();
+builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 
 var app = builder.Build();
