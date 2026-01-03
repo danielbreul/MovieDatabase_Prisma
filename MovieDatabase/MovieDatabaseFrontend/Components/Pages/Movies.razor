@@ -1,10 +1,38 @@
-﻿@page "/"
+﻿﻿@page "/"
 @inject IMovieService MovieService
 @rendermode InteractiveServer
 
 <Heading>Movies</Heading>
 
-<Table Striped>
+<Row>
+    <Column ColumnSize="ColumnSize.IsAuto">
+        <Button Color="Color.Primary">
+            <Icon Name="IconName.Add" />
+            Neuer Film
+        </Button>
+    </Column>
+    <Column>
+        <Addons>
+            <Addon AddonType="AddonType.Body">
+                <TextEdit Placeholder="Filmtitel eingeben..." />
+            </Addon>
+            <Addon AddonType="AddonType.End">
+                <Button Color="Color.Secondary">
+                    Suche
+                    <Icon Name="IconName.Search" />
+                </Button>
+            </Addon>
+        </Addons>
+    </Column>
+</Row>
+
+<Table Striped Hoverable>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>Titel</TableHeaderCell>
+            <TableHeaderCell>Löschen</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
     <TableBody>
         @if (allMovies is not null)
         {
@@ -15,8 +43,9 @@
                     <TableRow HoverCursor="Cursor.Pointer" Clicked="() => ShowMovieDetail(movie)">
                         <TableRowCell>@movie.Title</TableRowCell>
                         <TableRowCell>
-                            <Button Color="Color.Primary" Size="Size.Small" Clicked="@(() => EditMovie(movie))" @onclick:stopPropagation>
-                                <Icon Name="IconName.Edit" />
+                            <Button Color="Color.Primary" Size="Size.Small" Clicked="@(() => DeleteMovie(movie))" @onclick:stopPropagation>
+                                <Icon Name="IconName.Delete" />
+                                Löschen
                             </Button>
                         </TableRowCell>
                     </TableRow>
@@ -42,46 +71,75 @@
     <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>
-                @(editMovie ? "Film bearbeiten" : "Filmdetails")
+                @(movieDetailMode == MovieDetailMode.Create ? "Neuen Film erstellen"
+                                : movieDetailMode == MovieDetailMode.Edit ? "Film bearbeiten"
+                                : "Filmdetails")
             </ModalTitle>
+            @if (movieDetailMode == MovieDetailMode.View)
+            {
+                <Button Margin="Margin.Is3.FromStart"
+                        Color="Color.Primary"
+                        Size="Size.Small"
+                        Clicked="() => movieDetailMode = MovieDetailMode.Edit"
+                        @onclick:stopPropagation>
+                    <Icon Name="IconName.Edit" />
+                    Bearbeiten
+                </Button>
+            }
         </ModalHeader>
         <ModalBody>
             @if (selectedMovie is not null)
             {
-                <Text>Titel: @selectedMovie.Title</Text>
+                if (movieDetailMode == MovieDetailMode.View)
+                {
+                    <Text>Titel: @selectedMovie.Title</Text>
+                }
+                else
+                {
+                    <Validations @ref="validations">
+                        <Validation Validator="ValidationRule.IsNotEmpty">
+                            <Field Horizontal>
+                                <FieldLabel RequiredIndicator ColumnSize="ColumnSize.Is2">Titel</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.Is5">
+                                    <TextEdit @bind-Text="selectedMovie.Title">
+                                        <Feedback>
+                                            <ValidationError>Titel ist erforderlich.</ValidationError>
+                                        </Feedback>
+                                    </TextEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                    </Validations>
+                }
             }
         </ModalBody>
         <ModalFooter>
-            @if (editMovie)
-            {
-                <Button Color="Color.Secondary" Clicked="AbortEditMovie">Abbrechen</Button>
-                <Button Color="Color.Primary" Clicked="SaveEditedMovie">Speichern</Button>
-            }
-            else
+            @if (movieDetailMode == MovieDetailMode.View)
             {
                 <Button Color="Color.Primary" Clicked="CloseMovieDetailAsync">Schließen</Button>
             }
+            else
+            {
+                <Button Color="Color.Secondary" Clicked="AbortMovieDetail">Abbrechen</Button>
+                <Button Color="Color.Primary" Clicked="SaveMovieDetail">Speichern</Button>
+            }
         </ModalFooter>
     </ModalContent>
 </Modal>
 
-<Modal @ref="discardWarning">
-    <ModalContent Centered>
-        <ModalHeader>
-            <ModalTitle>Änderungen verwerfen?</ModalTitle>
-        </ModalHeader>
-        <ModalBody>
-            <Text>Möchten Sie die Änderungen wirklich verwerfen?</Text>
-        </ModalBody>
-        <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="() => discardWarning.Hide()">Abbrechen</Button>
-            <Button Color="Color.Primary" Clicked="AbortEditConfirmed">Änderungen verwerfen</Button>
-        </ModalFooter>
-    </ModalContent>
-</Modal>
+<Warning @ref="discardWarning"
+         WarningTitle="Änderungen verwerfen?"
+         WarningMessage="Möchten Sie die Änderungen wirklich verwerfen?"
+         ConfirmButtonText="Änderungen verwerfen" />
 
-@code {
-    private IEnumerable<MovieViewModel>? allMovies = null;
+<Warning @ref="deleteWarning"
+         WarningTitle="Film löschen?"
+         WarningMessage="Möchten Sie den Film wirklich unwiderruflich löschen?"
+         ConfirmButtonText="Film löschen" />
+
+@code
+{
+    private List<MovieViewModel>? allMovies = null;
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine("OnInitializedAsync called.");
@@ -91,34 +149,36 @@
         Console.WriteLine("OnAfterRenderAsync called.");
         if (firstRender)
         {
-            Console.WriteLine("Fetching movies...");
-            allMovies = await MovieService.GetMoviesAsync();
-            Console.WriteLine($"Fetched {allMovies.Count()} movies.");
-            StateHasChanged();
+            await RefreshMoviesAsync();
         }
+    }
+    protected async Task RefreshMoviesAsync()
+    {
+        Console.WriteLine("Refreshing movies...");
+        allMovies = (await MovieService.GetMoviesAsync()).ToList();
+        Console.WriteLine($"Refreshed to {allMovies.Count()} movies.");
+        StateHasChanged();
     }
 
     #region Movie Detail/Edit Modal
 
     private Modal modal = null!;
-    private bool editMovie;
+    private Validations? validations;
+    private MovieDetailMode movieDetailMode;
     private bool cancelClose;
     private MovieDetailViewModel? selectedMovie;
 
-    private async Task ShowMovieDetail(MovieViewModel movie)
+    private enum MovieDetailMode
     {
-        Console.WriteLine("ShowMovieDetail");
-        selectedMovie = await MovieService.GetMovieDetailAsync(movie);
-        editMovie = false;
-        cancelClose = true;
-        await modal.Show();
+        View,
+        Create,
+        Edit
     }
 
-    private async Task EditMovie(MovieViewModel movie)
+    private async Task ShowMovieDetail(MovieViewModel movie)
     {
-        Console.WriteLine("EditMovie");
         selectedMovie = await MovieService.GetMovieDetailAsync(movie);
-        editMovie = true;
+        movieDetailMode = MovieDetailMode.View;
         cancelClose = true;
         await modal.Show();
     }
@@ -142,8 +202,41 @@
         selectedMovie = null;
     }
 
-    private Task SaveEditedMovie()
+    private async Task SaveMovieDetail()
     {
+        if (selectedMovie is not null && (validations?.AllValidationsSuccessful ?? false))
+        {
+            if (movieDetailMode == MovieDetailMode.Create)
+            {
+                var newMovie = await MovieService.CreateMovieAsync(selectedMovie);
+                if (newMovie is not null)
+                {
+                    allMovies?.Add(new MovieViewModel { Id = newMovie.Id, Title = newMovie.Title });
+                }
+            }
+            else if (movieDetailMode == MovieDetailMode.Edit)
+            {
+                await MovieService.UpdateMovieAsync(selectedMovie);
+                allMovies?.Find(m => m.Id == selectedMovie.Id)?.Title = selectedMovie.Title;
+            }
+        }
+        await CloseMovieDetailAsync();
+        StateHasChanged();
+    }
+
+    #endregion
+
+    #region Delete Warning
+
+    private Warning deleteWarning = null!;
+
+    private Task DeleteMovie(MovieViewModel movie)
+    {
+        deleteWarning.Show(async () => {
+            await MovieService.DeleteMovieAsync(movie);
+            allMovies?.Remove(movie);
+            StateHasChanged();
+        });
         return Task.CompletedTask;
     }
 
@@ -151,18 +244,12 @@
 
     #region Discard Warning
 
-    private Modal discardWarning = null!;
+    private Warning discardWarning = null!;
 
-    private Task AbortEditMovie()
+    private Task AbortMovieDetail()
     {
-        discardWarning.Show();
+        discardWarning.Show(CloseMovieDetailAsync);
         return Task.CompletedTask;
-    }
-
-    private Task AbortEditConfirmed()
-    {
-        discardWarning.Hide();
-        return CloseMovieDetailAsync();
     }
 
     #endregion

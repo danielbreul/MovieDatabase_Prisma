@@ -41,6 +41,10 @@ namespace MovieDatabaseFrontend.Services
                 {
                     movieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
                 }
+                else if (response.StatusCode != HttpStatusCode.NoContent)
+                {
+                    errorService.LogHttpResponse(response);
+                }
             }
             catch (Exception e)
             {
@@ -69,6 +73,107 @@ namespace MovieDatabaseFrontend.Services
             {
                 return null;
             }
+        }
+
+        public async Task<MovieDetailViewModel> CreateMovieAsync(MovieDetailViewModel movie)
+        {
+            var movieDto = new MovieCreateUpdateDto
+            {
+                Title = movie.Title,
+                Plot = movie.Plot,
+                ReleaseDate = movie.ReleaseDate,
+                Rating = movie.Rating,
+                AgeRating = movie.AgeRating,
+                Genres = movie.Genres.Select(g => g.Id),
+                Directors = movie.Directors.Select(p => p.Id),
+                Writer = movie.Writer?.Id,
+                Actors = movie.Actors.Select(p => p.Id),
+                Duration = movie.Duration
+            };
+            MovieDetailDto? createdMovieDetailDto = null;
+            try
+            {
+                var response = await httpClient.PostAsJsonAsync("http://localhost:5172/movies/", movieDto);
+                if (response.IsSuccessStatusCode)
+                {
+                    createdMovieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
+                }
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    errorService.LogHttpResponse(response, "Der Film enthält fehlerhafte Daten und konnte deshalb nicht gespeichert werden.");
+                }
+                else
+                {
+                    errorService.LogHttpResponse(response);
+                }
+            }
+            catch (Exception e)
+            {
+                errorService.LogError(e);
+            }
+        }
+
+        public async Task<bool> UpdateMovieAsync(MovieDetailViewModel movie)
+        {
+            var movieDto = new MovieCreateUpdateDto
+            {
+                Title = movie.Title,
+                Plot = movie.Plot,
+                ReleaseDate = movie.ReleaseDate,
+                Rating = movie.Rating,
+                AgeRating = movie.AgeRating,
+                Genres = movie.Genres.Select(g => g.Id),
+                Directors = movie.Directors.Select(p => p.Id),
+                Writer = movie.Writer?.Id,
+                Actors = movie.Actors.Select(p => p.Id),
+                Duration = movie.Duration
+            };
+            try
+            {
+                var response = await httpClient.PutAsJsonAsync("http://localhost:5172/movies/" + movie.Id, movieDto);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    errorService.LogMessage("Der Film konnte nicht bearbeitet werden, da er in der Datenbank nicht existiert.");
+                }
+                else if (!response.IsSuccessStatusCode)
+                {
+                    errorService.LogHttpResponse(response);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                errorService.LogError(e);
+            }
+            return false;
+        }
+
+        public async Task<bool> DeleteMovieAsync(MovieViewModel movie)
+        {
+            try
+            {
+                var response = await httpClient.DeleteAsync("http://localhost:5172/movies/" + movie.Id);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    errorService.LogMessage("Der Film konnte nicht gelöscht werden, da er in der Datenbank nicht existiert.");
+                }
+                else if (!response.IsSuccessStatusCode)
+                {
+                    errorService.LogHttpResponse(response);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                errorService.LogError(e);
+            }
+            return false;
         }
     }
 }
