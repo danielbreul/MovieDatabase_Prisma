@@ -1,8 +1,8 @@
 ﻿namespace MovieDatabaseBackend.Dtos
 {
-    public class MovieDto(int id, string title)
+    public class MovieDto
     {
-        public int Id { get; set; } = id;
-        public string Title { get; set; } = title;
+        public required int Id { get; set; }
+        public required string Title { get; set; }
     }
 }

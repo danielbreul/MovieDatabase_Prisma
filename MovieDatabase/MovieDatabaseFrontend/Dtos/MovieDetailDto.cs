@@ -1,9 +1,9 @@
 ﻿namespace MovieDatabaseBackend.Dtos
 {
-    public class MovieDetailDto(int id, string title)
+    public class MovieDetailDto()
     {
-        public int Id { get; set; } = id;
-        public string Title { get; set; } = title;
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Plot { get; set; }
         public DateTime? ReleaseDate { get; set; }
         public int? Rating { get; set; }
