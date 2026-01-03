@@ -4,7 +4,9 @@
     <Layout>
         <LayoutHeader Fixed>
             <Bar Background="Background.Primary" ThemeContrast="ThemeContrast.Dark" Mode="BarMode.Horizontal" Breakpoint="Breakpoint.Desktop">
-                <BarBrand Margin="Margin.Is4.OnX">Film Datenbank</BarBrand>
+                <BarBrand Margin="Margin.Is4.OnX">
+                    <BarLink href="">Film Datenbank</BarLink>
+                </BarBrand>
                 <BarToggler />
                 <BarMenu>
                     <BarStart>
@@ -23,6 +25,7 @@
         </LayoutHeader>
         <LayoutContent Margin="Margin.Is4.OnAll">
             @Body
+
         </LayoutContent>
     </Layout>
 </Blazorise.ThemeProvider>

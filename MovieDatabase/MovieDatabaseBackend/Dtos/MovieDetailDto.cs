@@ -2,8 +2,8 @@
 {
     public class MovieDetailDto(int id, string title)
     {
-        public int Id { get; set; } = id;
-        public string Title { get; set; } = title;
+        public required int Id { get; set; }
+        public required string Title { get; set; }
         public string? Plot { get; set; }
         public DateTime? ReleaseDate { get; set; }
         public int? Rating { get; set; }

@@ -1,0 +1,42 @@
+﻿@implements IDisposable
+@inject ErrorService ErrorService
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <Modal>
+        <ModalContent>
+            <ModalHeader>
+                <ModalTitle>Fehler</ModalTitle>
+                <CloseButton />
+                <ModalBody>
+                    <Text>@errorMessage</Text>
+                </ModalBody>
+            </ModalHeader>
+        </ModalContent>
+    </Modal>
+}
+
+@code {
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        ErrorService.OnError += HandleError;
+    }
+
+    private void HandleError(string message)
+    {
+        errorMessage = message;
+        StateHasChanged();
+    }
+
+    private void CloseError()
+    {
+        errorMessage = null;
+    }
+
+    public void Dispose()
+    {
+        ErrorService.OnError -= HandleError;
+    }
+}

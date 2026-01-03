@@ -5,6 +5,6 @@ namespace MovieDatabaseBackend.Dtos
     public class GenreCreateUpdateDto
     {
         [Required(ErrorMessage = "Name is required")]
-        public string Name { get; set; } = string.Empty;
+        public required string Name { get; set; }
     }
 }
