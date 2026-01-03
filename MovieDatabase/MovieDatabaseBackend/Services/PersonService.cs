@@ -18,7 +18,7 @@ namespace MovieDatabaseBackend.Services
             }
             else
             {
-                return Result<IEnumerable<PersonDto>>.Ok(persons.Select(p => new PersonDto(p.Id, p.Name)));
+                return Result<IEnumerable<PersonDto>>.Ok(persons.Select(p => new PersonDto { Id = p.Id, Name = p.Name }));
             }
         }
 
@@ -38,7 +38,7 @@ namespace MovieDatabaseBackend.Services
             _uof.Persons.AddPerson(person);
             _uof.SaveChanges();
 
-            return Result<PersonDto?>.Ok(new PersonDto(person.Id, person.Name));
+            return Result<PersonDto?>.Ok(new PersonDto { Id = person.Id, Name = person.Name });
         }
 
         public Result UpdatePerson(int id, PersonCreateUpdateDto personDto)
@@ -84,7 +84,7 @@ namespace MovieDatabaseBackend.Services
             var person = _uof.Persons.GetPerson(personId);
             if (person is not null)
             {
-                var movies = person.DirectedMovies.Select(m => new MovieDto(m.Id, m.Title));
+                var movies = person.DirectedMovies.Select(m => new MovieDto { Id = m.Id, Title = m.Title });
                 if (movies.Any())
                 {
                     return Result<IEnumerable<MovieDto>>.Ok(movies);
@@ -98,7 +98,7 @@ namespace MovieDatabaseBackend.Services
             var person = _uof.Persons.GetPerson(personId);
             if (person is not null)
             {
-                var movies = person.ActedInMovies.Select(m => new MovieDto(m.Id, m.Title));
+                var movies = person.ActedInMovies.Select(m => new MovieDto { Id = m.Id, Title = m.Title });
                 if (movies.Any())
                 {
                     return Result<IEnumerable<MovieDto>>.Ok(movies);
@@ -112,7 +112,7 @@ namespace MovieDatabaseBackend.Services
             var person = _uof.Persons.GetPerson(personId);
             if (person is not null)
             {
-                var movies = person.WrittenMovies.Select(m => new MovieDto(m.Id, m.Title));
+                var movies = person.WrittenMovies.Select(m => new MovieDto { Id = m.Id, Title = m.Title });
                 if (movies.Any())
                 {
                     return Result<IEnumerable<MovieDto>>.Ok(movies);
