@@ -1,7 +1,227 @@
 ﻿@page "/genres"
+@inject IGenreService GenreService
+@rendermode InteractiveServer
 
-<h3>Genres</h3>
+<PageTitle>Genres</PageTitle>
 
-@code {
+<Heading>Genres</Heading>
+
+<Button Color="Color.Primary" Clicked="CreateGenre">
+    <Icon Name="IconName.Add" />
+    Neues Genre
+</Button>
+
+<Table Striped>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>Name</TableHeaderCell>
+            <TableHeaderCell TextAlignment="TextAlignment.Center">Bearbeiten</TableHeaderCell>
+            <TableHeaderCell TextAlignment="TextAlignment.Center">Löschen</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @if (allGenres is not null)
+        {
+            if (allGenres.Any())
+            {
+                foreach (var genre in allGenres)
+                {
+                    <TableRow>
+                        <TableRowCell>@genre.Name</TableRowCell>
+                        <TableRowCell TextAlignment="TextAlignment.Center">
+                            <Button Color="Color.Secondary" Size="Size.Small" Clicked="@(() => EditGenre(genre))" @onclick:stopPropagation>
+                                <Icon Name="IconName.Edit" />
+                            </Button>
+                        </TableRowCell>
+                        <TableRowCell TextAlignment="TextAlignment.Center">
+                            <Button Color="Color.Primary" Size="Size.Small" Clicked="@(() => DeleteGenre(genre))" @onclick:stopPropagation>
+                                <Icon Name="IconName.Delete" />
+                            </Button>
+                        </TableRowCell>
+                    </TableRow>
+                }
+            }
+            else
+            {
+                <TableRow>
+                    <TableRowCell>Es sind keine Genres vorhanden.</TableRowCell>
+                </TableRow>
+            }
+        }
+        else
+        {
+            <TableRow>
+                <TableRowCell>Genres werden geladen ...</TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>
+
+<Modal @ref="genreModal" Closing="OnGenreModalClosing">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>
+                @(genreModalMode == GenreModalMode.Create ? "Neues Genre erstellen" : "Genre bearbeiten")
+            </ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+            <Validation @ref="validation" Validator="ValidationRule.IsNotEmpty">
+                <Field Horizontal>
+                    <FieldLabel RequiredIndicator ColumnSize="ColumnSize.Is2">Name</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is5">
+                        <TextEdit @bind-Text="editingGenre">
+                            <Feedback>
+                                <ValidationError>Name ist erforderlich.</ValidationError>
+                            </Feedback>
+                        </TextEdit>
+                    </FieldBody>
+                </Field>
+            </Validation>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="AbortGenreModal">Abbrechen</Button>
+            <Button Color="Color.Primary" Clicked="SaveGenre">Speichern</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Warning @ref="discardWarning"
+         WarningTitle="Änderungen verwerfen?"
+         WarningMessage="Möchten Sie die Änderungen wirklich verwerfen?"
+         ConfirmButtonText="Änderungen verwerfen" />
+
+<Warning @ref="deleteWarning"
+         WarningTitle="Genre löschen?"
+         WarningMessage='@("Möchten Sie das Genre \"" + deletingGenre + "\" wirklich unwiderruflich löschen?")'
+         ConfirmButtonText="Genre löschen" />
+
+@code
+{
+    private List<GenreViewModel> allGenres = [];
+
+    #region Lifecycle
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync called.");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("OnAfterRenderAsync called.");
+        if (firstRender)
+        {
+            allGenres = (await GenreService.GetGenresAsync()).ToList();
+            StateHasChanged();
+        }
+    }
+
+    #endregion
+
+    #region Genre Modal
+
+    private Modal genreModal = null!;
+    private Validation? validation;
+    private GenreModalMode genreModalMode;
+    private bool cancelClose;
+    private GenreViewModel? selectedGenre;
+    private string editingGenre = string.Empty;
+
+    private enum GenreModalMode
+    {
+        Create,
+        Edit
+    }
+
+    private async Task CreateGenre()
+    {
+        editingGenre = string.Empty;
+        genreModalMode = GenreModalMode.Create;
+        cancelClose = true;
+        await genreModal.Show();
+    }
+
+    private async Task EditGenre(GenreViewModel genre)
+    {
+        selectedGenre = genre;
+        editingGenre = genre.Name;
+        genreModalMode = GenreModalMode.Edit;
+        cancelClose = true;
+        await genreModal.Show();
+    }
+
+    private Task OnGenreModalClosing(ModalClosingEventArgs e)
+    {
+        e.Cancel = cancelClose;
+        return Task.CompletedTask;
+    }
+
+    private async Task CloseGenreModalAsync()
+    {
+        cancelClose = false;
+        await genreModal.Hide();
+        selectedGenre = null;
+        editingGenre = string.Empty;
+    }
+
+    private async Task SaveGenre()
+    {
+        if (validation?.Status == ValidationStatus.Success)
+        {
+            if (genreModalMode == GenreModalMode.Create)
+            {
+                var newGenre = await GenreService.CreateGenreAsync(new GenreViewModel { Name = editingGenre });
+                if (newGenre is not null)
+                {
+                    allGenres.Add(newGenre);
+                    StateHasChanged();
+                }
+            }
+            else if (selectedGenre is not null && genreModalMode == GenreModalMode.Edit)
+            {
+                if (await GenreService.UpdateGenreAsync(new GenreViewModel { Id = selectedGenre.Id, Name = editingGenre }))
+                {
+                    selectedGenre.Name = editingGenre;
+                    StateHasChanged();
+                }
+            }
+        }
+        await CloseGenreModalAsync();
+    }
+
+    #endregion
+
+    #region Delete Warning
+
+    private Warning deleteWarning = null!;
+    private string deletingGenre = string.Empty;
+
+    private Task DeleteGenre(GenreViewModel genre)
+    {
+        deletingGenre = genre.Name;
+        deleteWarning.Show(async () =>
+        {
+            if (await GenreService.DeleteGenreAsync(genre))
+            {
+                allGenres.Remove(genre);
+                StateHasChanged();
+            }
+        });
+        return Task.CompletedTask;
+    }
+
+    #endregion
+
+    #region Discard Warning
+
+    private Warning discardWarning = null!;
+
+    private Task AbortGenreModal()
+    {
+        discardWarning.Show(CloseGenreModalAsync);
+        return Task.CompletedTask;
+    }
+
+    #endregion
 
 }

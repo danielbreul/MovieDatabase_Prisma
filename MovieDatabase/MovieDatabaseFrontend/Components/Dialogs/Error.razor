@@ -1,12 +1,13 @@
-﻿﻿@implements IDisposable
+﻿@implements IDisposable
 @inject IErrorService ErrorService
+@rendermode InteractiveServer
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
 {
     <Alert Color="Color.Danger" Visible>
         <AlertMessage>Fehler</AlertMessage>
         <AlertDescription>@errorMessage</AlertDescription>
-        <CloseButton Clicked="() => errorMessage = null"/>
+        <CloseButton Clicked="() => errorMessage = null" />
     </Alert>
 }
 
@@ -22,11 +23,13 @@
     private void HandleError(string message)
     {
         errorMessage = message;
+        StateHasChanged();
     }
 
     private void CloseError()
     {
         errorMessage = null;
+        StateHasChanged();
     }
 
     public void Dispose()
