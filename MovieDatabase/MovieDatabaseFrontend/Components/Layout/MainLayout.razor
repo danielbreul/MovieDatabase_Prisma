@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+﻿﻿@inherits LayoutComponentBase
 
 <Blazorise.ThemeProvider Theme="@theme">
     <Layout>
@@ -25,7 +25,7 @@
         </LayoutHeader>
         <LayoutContent Margin="Margin.Is4.OnAll">
             @Body
-
+            <Error />
         </LayoutContent>
     </Layout>
 </Blazorise.ThemeProvider>

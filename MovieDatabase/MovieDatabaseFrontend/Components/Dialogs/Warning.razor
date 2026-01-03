@@ -1,0 +1,46 @@
+﻿<Modal @ref="modal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@WarningTitle</ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+            <Text>@WarningMessage</Text>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="OnAbortClicked">Abbrechen</Button>
+            <Button Color="Color.Primary" Clicked="OnConfirmClicked">@ConfirmButtonText</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code
+{
+    [Parameter] public string? WarningTitle { get; set; }
+    [Parameter] public string? WarningMessage { get; set; }
+    [Parameter] public string? ConfirmButtonText { get; set; }
+
+    private Modal modal = null!;
+
+    public Func<Task>? OnConfirm;
+
+    public void Show(Func<Task> onConfirm)
+    {
+        OnConfirm = onConfirm;
+        modal.Show();
+    }
+
+    private Task OnAbortClicked()
+    {
+        modal.Hide();
+        OnConfirm = null;
+        return Task.CompletedTask;
+    }
+
+    private Task OnConfirmClicked()
+    {
+        modal.Hide();
+        OnConfirm?.Invoke();
+        OnConfirm = null;
+        return Task.CompletedTask;
+    }
+}

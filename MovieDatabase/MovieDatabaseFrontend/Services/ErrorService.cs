@@ -9,6 +9,11 @@
             OnError?.Invoke("Unerwartete HTTP-Response. Statuscode: " + response.StatusCode + "\nInhalt: " + response.RequestMessage);
         }
 
+        public void LogMessage(string message)
+        {
+            OnError?.Invoke(message);
+        }
+
         public void LogError(Exception ex)
         {
             OnError?.Invoke("Unerwartete Exception: " + ex.Message);
