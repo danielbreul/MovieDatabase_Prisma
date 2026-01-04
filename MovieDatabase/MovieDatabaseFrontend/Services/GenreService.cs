@@ -116,6 +116,10 @@ namespace MovieDatabaseFrontend.Services
                 {
                     errorService.LogMessage("Das Genre konnte nicht gelöscht werden, da es in der Datenbank nicht existiert.");
                 }
+                else if (response.StatusCode == HttpStatusCode.Conflict)
+                {
+                    errorService.LogMessage("Das Genre konnte nicht gelöscht werden, da es in mindestens einem Film referenziert ist.");
+                }
                 else if (!response.IsSuccessStatusCode)
                 {
                     errorService.LogHttpResponse(response);

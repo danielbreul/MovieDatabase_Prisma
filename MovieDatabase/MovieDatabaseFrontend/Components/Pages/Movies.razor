@@ -1,5 +1,7 @@
 ﻿@page "/"
 @inject IMovieService MovieService
+@inject IGenreService GenreService
+@inject IPersonService PersonService
 @rendermode InteractiveServer
 
 <PageTitle>Filme</PageTitle>
@@ -69,7 +71,7 @@
 </Table>
 
 <Modal @ref="movieModal" Opening="OnMovieModalOpening" Closing="OnMovieModalClosing">
-    <ModalContent Centered>
+    <ModalContent Centered Size="ModalSize.ExtraLarge">
         <ModalHeader>
             <ModalTitle>
                 @(movieModalMode == MovieModalMode.Create ? "Neuen Film erstellen"
@@ -81,7 +83,7 @@
                 <Button Margin="Margin.Is3.FromStart"
                         Color="Color.Primary"
                         Size="Size.Small"
-                        Clicked="() => movieModalMode = MovieModalMode.Edit"
+                        Clicked="EditMovie"
                         @onclick:stopPropagation>
                     <Icon Name="IconName.Edit" />
                     Bearbeiten
@@ -93,9 +95,130 @@
             {
                 if (movieModalMode == MovieModalMode.View)
                 {
-                    <Text>Titel: @selectedMovie.Title</Text>
-                    <Text>Handlung: @selectedMovie.Plot</Text>
-                    <Text>Erscheinungsdatum: @selectedMovie.ReleaseDate?.ToString("dd.MM.yyyy")</Text>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Titel</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @selectedMovie.Title
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Handlung</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @* scrollable paragraph *@
+                            <Paragraph Style="max-height:50px; overflow-y:auto; white-space: pre-line;">
+                                @selectedMovie.Plot
+                            </Paragraph>
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Erscheinungsdatum</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @selectedMovie.ReleaseDate?.ToString("dd.MM.yyyy")
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Bewertung</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            <Rating ReadOnly Color="Color.Primary" @bind-SelectedValue="@ratingValue" />
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Altersfreigabe</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @(selectedMovie.AgeRating is not null ? "FSK " + selectedMovie.AgeRating.ToString() : "-")
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Genre(s)</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @foreach (GenreViewModel genre in selectedMovie.Genres)
+                            {
+                                <Badge Color="Color.Primary"
+                                        Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                        Padding="Padding.Is2"
+                                        TextWeight="TextWeight.Normal"
+                                        TextSize="TextSize.Small"
+                                        style="cursor: pointer;"
+                                        @onclick="() => Console.WriteLine()">
+                                    @genre.Name
+                                </Badge>
+                            }
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Regie</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @foreach (PersonViewModel person in selectedMovie.Directors)
+                            {
+                                <Badge Color="Color.Primary"
+                                       Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                       Padding="Padding.Is2"
+                                       TextWeight="TextWeight.Normal"
+                                       TextSize="TextSize.Small"
+                                       style="cursor: pointer;"
+                                       @onclick="() => Console.WriteLine()">
+                                    @person.Name
+                                </Badge>
+                            }
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Drehbuch</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            <Badge Color="Color.Primary"
+                                   Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                   Padding="Padding.Is2"
+                                   TextWeight="TextWeight.Normal"
+                                   TextSize="TextSize.Small"
+                                   style="cursor: pointer;"
+                                   @onclick="() => Console.WriteLine()">
+                                @selectedMovie.Writer?.Name
+                            </Badge>
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Hauptdarsteller</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @foreach (PersonViewModel person in selectedMovie.Actors)
+                            {
+                                <Badge Color="Color.Primary"
+                                       Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                       Padding="Padding.Is2"
+                                       TextWeight="TextWeight.Normal"
+                                       TextSize="TextSize.Small"
+                                       style="cursor: pointer;"
+                                       @onclick="() => Console.WriteLine()">
+                                    @person.Name
+                                </Badge>
+                            }
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Laufzeit</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @selectedMovie.Duration Minuten
+                        </Column>
+                    </Row>
                 }
                 else
                 {
@@ -103,7 +226,7 @@
                         <Validation Validator="ValidationRule.IsNotEmpty">
                             <Field>
                                 <FieldLabel RequiredIndicator>Titel</FieldLabel>
-                                <FieldBody ColumnSize="ColumnSize.IsFull">
+                                <FieldBody>
                                     <TextEdit @bind-Text="selectedMovie.Title">
                                         <Feedback>
                                             <ValidationError>Titel ist erforderlich.</ValidationError>
@@ -118,28 +241,28 @@
                                 <MemoEdit AutoSize @bind-Text="selectedMovie.Plot" />
                             </FieldBody>
                         </Field>
-                        <Field>
-                            <FieldLabel ColumnSize="ColumnSize.Is2">Erscheinungsdatum</FieldLabel>
-                            <FieldBody ColumnSize="ColumnSize.Is10">
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Erscheinungsdatum</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is8">
                                 <DateEdit TValue="DateTime?" @bind-Date="selectedMovie.ReleaseDate" />
                             </FieldBody>
                         </Field>
-                        <Field>
-                            <FieldLabel ColumnSize="ColumnSize.Is2">Bewertung</FieldLabel>
-                            <FieldBody ColumnSize="ColumnSize.Is10">
-                                <Select TValue="int?" @bind-SelectedValue="selectedMovie.Rating">
-                                    <SelectItem Value="(int?)null">Bitte wählen...</SelectItem>
-                                    <SelectItem Value="1">1 Stern</SelectItem>
-                                    <SelectItem Value="2">2 Sterne</SelectItem>
-                                    <SelectItem Value="3">3 Sterne</SelectItem>
-                                    <SelectItem Value="4">4 Sterne</SelectItem>
-                                    <SelectItem Value="5">5 Sterne</SelectItem>
-                                </Select>
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Bewertung</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is8">
+                                <Rating Color="Color.Primary" @bind-SelectedValue="@ratingValue" />
+                                @if (ratingValue > 0)
+                                {
+                                    <Button Color="Color.Light" Size="Size.Small" Clicked="() => selectedMovie.Rating = null" Margin="Margin.Is2.FromStart">
+                                        <Icon Name="IconName.Clear" />
+                                        Zurücksetzen
+                                    </Button>
+                                }
                             </FieldBody>
                         </Field>
-                        <Field>
-                            <FieldLabel ColumnSize="ColumnSize.Is2">FSK</FieldLabel>
-                            <FieldBody ColumnSize="ColumnSize.Is10">
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Altersfreigabe</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is8">
                                 <Select TValue="int?" @bind-SelectedValue="selectedMovie.AgeRating">
                                     <SelectItem Value="(int?)null">Bitte wählen...</SelectItem>
                                     <SelectItem Value="0">FSK 0</SelectItem>
@@ -147,6 +270,122 @@
                                     <SelectItem Value="12">FSK 12</SelectItem>
                                     <SelectItem Value="18">FSK 18</SelectItem>
                                 </Select>
+                            </FieldBody>
+                        </Field>
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Genre(s)</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is8">
+                                @foreach (GenreViewModel genre in selectedMovie.Genres)
+                                {
+                                    <Badge Color="Color.Primary"
+                                           Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                           Padding="Padding.Is2"
+                                           TextWeight="TextWeight.Normal"
+                                           TextSize="TextSize.Small"
+                                           CloseClicked="() => OnRemoveGenre(genre)">
+                                        @genre.Name
+                                    </Badge>
+                                }
+                                <Select TValue="int?" @bind-SelectedValue="addGenre">
+                                    @if (availableGenres?.Any() ?? false)
+                                    {
+                                        <SelectItem Value="(int?)null">Genre hinzufügen...</SelectItem>
+                                        @foreach (GenreViewModel genre in availableGenres)
+                                        {
+                                            <SelectItem Value="@genre.Id">@genre.Name</SelectItem>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <SelectItem Value="(int?)null">Keine Genres verfügbar</SelectItem>
+                                    }
+                                </Select>
+                            </FieldBody>
+                        </Field>
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Regie</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is8">
+                                @foreach (PersonViewModel person in selectedMovie.Directors)
+                                {
+                                    <Badge Color="Color.Primary"
+                                            Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                            Padding="Padding.Is2"
+                                            TextWeight="TextWeight.Normal"
+                                            TextSize="TextSize.Small"
+                                            CloseClicked="() => OnRemoveDirector(person)">
+                                        @person.Name
+                                    </Badge>
+                                }
+                                <Select TValue="int?" @bind-SelectedValue="addDirector">
+                                    @if (availableDirectors?.Any() ?? false)
+                                    {
+                                        <SelectItem Value="(int?)null">Regie hinzufügen...</SelectItem>
+                                        @foreach (PersonViewModel person in availableDirectors)
+                                        {
+                                            <SelectItem Value="@person.Id">@person.Name</SelectItem>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <SelectItem Value="(int?)null">Keine Personen verfügbar</SelectItem>
+                                    }
+                                </Select>
+                            </FieldBody>
+                        </Field>
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Drehbuch</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is8">
+                                <Select TValue="int?" @bind-SelectedValue="selectWriter">
+                                    @if (allPersons?.Any() ?? false)
+                                    {
+                                        <SelectItem Value="(int?)null">Bitte wählen...</SelectItem>
+                                        @foreach (PersonViewModel person in allPersons)
+                                        {
+                                            <SelectItem Value="person.Id">@person.Name</SelectItem>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <SelectItem Value="(int?)null">Keine Personen verfügbar</SelectItem>
+                                    }
+                                </Select>
+                            </FieldBody>
+                        </Field>
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Hauptdarsteller</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is8">
+                                @foreach (PersonViewModel person in selectedMovie.Actors)
+                                {
+                                    <Badge Color="Color.Primary"
+                                            Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                            Padding="Padding.Is2"
+                                            TextWeight="TextWeight.Normal"
+                                            TextSize="TextSize.Small"
+                                            CloseClicked="() => OnRemoveActor(person)">
+                                        @person.Name
+                                    </Badge>
+                                }
+                                <Select TValue="int?" @bind-SelectedValue="addActor">
+                                    @if (availableActors?.Any() ?? false)
+                                    {
+                                        <SelectItem Value="(int?)null">Darsteller hinzufügen...</SelectItem>
+                                        @foreach (PersonViewModel person in availableActors)
+                                        {
+                                            <SelectItem Value="@person.Id">@person.Name</SelectItem>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <SelectItem Value="(int?)null">Keine Personen verfügbar</SelectItem>
+                                    }
+                                </Select>
+                            </FieldBody>
+                        </Field>
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Laufzeit</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is8">
+                                <NumericEdit TValue="int?" Min="1" Max="1000" @bind-Value="selectedMovie.Duration" />
+                                <FieldHelp>Minuten (1 - 1000)</FieldHelp>
                             </FieldBody>
                         </Field>
                     </Validations>
@@ -180,6 +419,8 @@
 @code
 {
     private List<MovieViewModel>? allMovies;
+    private List<PersonViewModel>? allPersons;
+    private List<GenreViewModel>? allGenres;
 
     #region Lifecycle
 
@@ -188,6 +429,8 @@
         if (firstRender)
         {
             allMovies = (await MovieService.GetMoviesAsync()).ToList();
+            allGenres = (await GenreService.GetGenresAsync()).ToList();
+            allPersons = (await PersonService.GetPersonsAsync()).ToList();
             StateHasChanged();
         }
     }
@@ -221,6 +464,9 @@
     private MovieModalMode movieModalMode;
     private bool cancelClose;
     private MovieDetailViewModel? selectedMovie;
+    private List<GenreViewModel>? availableGenres;
+    private List<PersonViewModel>? availableDirectors;
+    private List<PersonViewModel>? availableActors;
 
     private enum MovieModalMode
     {
@@ -229,12 +475,105 @@
         Edit
     }
 
+    private int ratingValue
+    {
+        get => selectedMovie?.Rating ?? 0;
+        set => selectedMovie!.Rating = value > 0 ? value : null;
+    }
+
+    private int? addGenre
+    {
+        get => null;
+        set
+        {
+            var genre = availableGenres?.Find(g => g.Id == value);
+            if (genre is not null)
+            {
+                availableGenres?.Remove(genre);
+                selectedMovie?.Genres.Add(genre);
+                addGenre = null;
+            }
+        }
+    }
+
+    private int? selectWriter
+    {
+        get => selectedMovie?.Writer?.Id;
+        set
+        {
+            var person = allPersons?.Find(p => p.Id == value);
+            selectedMovie!.Writer = person;
+        }
+    }
+
+    private int? addDirector
+    {
+        get => null;
+        set
+        {
+            var person = availableDirectors?.Find(g => g.Id == value);
+            if (person is not null)
+            {
+                availableDirectors?.Remove(person);
+                selectedMovie?.Directors.Add(person);
+                addGenre = null;
+            }
+        }
+    }
+
+    private int? addActor
+    {
+        get => null;
+        set
+        {
+            var person = availableActors?.Find(g => g.Id == value);
+            if (person is not null)
+            {
+                availableActors?.Remove(person);
+                selectedMovie?.Actors.Add(person);
+                addGenre = null;
+            }
+        }
+    }
+
+    private void OnRemoveGenre(GenreViewModel genre)
+    {
+        selectedMovie?.Genres.Remove(genre);
+        availableGenres?.Add(genre);
+    }
+
+    private void OnRemoveDirector(PersonViewModel person)
+    {
+        selectedMovie?.Directors.Remove(person);
+        availableDirectors?.Add(person);
+    }
+
+    private void OnRemoveActor(PersonViewModel person)
+    {
+        selectedMovie?.Actors.Remove(person);
+        availableActors?.Add(person);
+    }
+
+    private void UpdateAvailableSelections()
+    {
+        availableGenres = allGenres?.Where(g => !selectedMovie?.Genres.Any(g1 => g1.Id == g.Id) ?? true).ToList();
+        availableDirectors = allPersons?.Where(p => !selectedMovie?.Directors.Any(p1 => p1.Id == p.Id) ?? true).ToList();
+        availableActors = allPersons?.Where(p => !selectedMovie?.Actors.Any(p1 => p1.Id == p.Id) ?? true).ToList();
+    }
+
     private async Task CreateMovie()
     {
         selectedMovie = new MovieDetailViewModel();
+        UpdateAvailableSelections();
         movieModalMode = MovieModalMode.Create;
         cancelClose = true;
         await movieModal.Show();
+    }
+
+    private async Task EditMovie()
+    {
+        UpdateAvailableSelections();
+        movieModalMode = MovieModalMode.Edit;
     }
 
     private async Task ShowMovieModal(MovieViewModel movie)
@@ -279,9 +618,11 @@
             }
             else if (movieModalMode == MovieModalMode.Edit)
             {
-                await MovieService.UpdateMovieAsync(selectedMovie);
-                allMovies?.Find(m => m.Id == selectedMovie.Id)?.Title = selectedMovie.Title;
-                StateHasChanged();
+                if (await MovieService.UpdateMovieAsync(selectedMovie))
+                {
+                    allMovies?.Find(m => m.Id == selectedMovie.Id)?.Title = selectedMovie.Title;
+                    StateHasChanged();
+                }
             }
         }
         await CloseMovieModalAsync();
