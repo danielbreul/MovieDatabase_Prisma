@@ -174,7 +174,7 @@ namespace MovieDatabaseFrontend.Services
             return false;
         }
 
-        private MovieCreateUpdateDto MovieViewModelToDto(MovieDetailViewModel movie)
+        private static MovieCreateUpdateDto MovieViewModelToDto(MovieDetailViewModel movie)
         {
             return new MovieCreateUpdateDto
             {
@@ -191,7 +191,7 @@ namespace MovieDatabaseFrontend.Services
             };
         }
 
-        private MovieDetailViewModel MovieDtoToViewModel(MovieDetailDto movie)
+        private static MovieDetailViewModel MovieDtoToViewModel(MovieDetailDto movie)
         {
             return new MovieDetailViewModel
             {
@@ -201,12 +201,12 @@ namespace MovieDatabaseFrontend.Services
                 ReleaseDate = movie.ReleaseDate,
                 Rating = movie.Rating,
                 AgeRating = movie.AgeRating,
-                Genres = movie.Genres.Select(g => new GenreViewModel { Id = g.Id, Name = g.Name }),
-                Directors = movie.Directors.Select(p => new PersonViewModel { Id = p.Id, Name = p.Name }),
+                Genres = movie.Genres.Select(g => new GenreViewModel { Id = g.Id, Name = g.Name }).ToList(),
+                Directors = movie.Directors.Select(p => new PersonViewModel { Id = p.Id, Name = p.Name }).ToList(),
                 Writer = movie.Writer is not null
                        ? new PersonViewModel { Id = movie.Writer.Id, Name = movie.Writer.Name }
                        : null,
-                Actors = movie.Actors.Select(p => new PersonViewModel { Id = p.Id, Name = p.Name }),
+                Actors = movie.Actors.Select(p => new PersonViewModel { Id = p.Id, Name = p.Name }).ToList(),
                 Duration = movie.Duration,
             };
         }

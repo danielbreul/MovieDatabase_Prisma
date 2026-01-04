@@ -10,10 +10,10 @@ namespace MovieDatabaseFrontend.ViewModels
         public DateTime? ReleaseDate { get; set; }
         public int? Rating { get; set; }
         public int? AgeRating { get; set; }
-        public IEnumerable<GenreViewModel> Genres { get; set; } = [];
-        public IEnumerable<PersonViewModel> Directors { get; set; } = [];
+        public List<GenreViewModel> Genres { get; set; } = [];
+        public List<PersonViewModel> Directors { get; set; } = [];
         public PersonViewModel? Writer { get; set; }
-        public IEnumerable<PersonViewModel> Actors { get; set; } = [];
+        public List<PersonViewModel> Actors { get; set; } = [];
         public int? Duration { get; set; }
     }
 }

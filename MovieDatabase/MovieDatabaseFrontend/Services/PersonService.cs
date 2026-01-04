@@ -116,6 +116,10 @@ namespace MovieDatabaseFrontend.Services
                 {
                     errorService.LogMessage("Die Person konnte nicht gelöscht werden, da sie in der Datenbank nicht existiert.");
                 }
+                else if (response.StatusCode == HttpStatusCode.Conflict)
+                {
+                    errorService.LogMessage("Die Person konnte nicht gelöscht werden, da sie in mindestens einem Film referenziert ist.");
+                }
                 else if (!response.IsSuccessStatusCode)
                 {
                     errorService.LogHttpResponse(response);
