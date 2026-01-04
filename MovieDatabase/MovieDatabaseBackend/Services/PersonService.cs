@@ -12,13 +12,13 @@ namespace MovieDatabaseBackend.Services
         public Result<IEnumerable<PersonDto>> GetPersons()
         {
             var persons = _uof.Persons.GetPersons();
-            if (persons is null)
+            if (persons.Any())
             {
-                return Result<IEnumerable<PersonDto>>.Fail(ResultState.NotFound);
+                return Result<IEnumerable<PersonDto>>.Ok(persons.Select(p => new PersonDto { Id = p.Id, Name = p.Name }));
             }
             else
             {
-                return Result<IEnumerable<PersonDto>>.Ok(persons.Select(p => new PersonDto { Id = p.Id, Name = p.Name }));
+                return Result<IEnumerable<PersonDto>>.Fail(ResultState.NotFound);
             }
         }
 

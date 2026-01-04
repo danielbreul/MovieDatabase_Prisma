@@ -8,25 +8,18 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
-        public IQueryable<int> FilterExistingPersonIds(IEnumerable<int> ids)
-        {
-            return _context.Persons
-                .Where(g => ids.Contains(g.Id))
-                .Select(g => g.Id);
-        }
-
-        public IQueryable<Person> GetPersonsByIds(IEnumerable<int> ids)
-        {
-            return _context.Persons
-                .Where(g => ids.Contains(g.Id));
-        }
-
         public IQueryable<Person> GetPersons()
         {
             return _context.Persons
                 .Include(p => p.DirectedMovies)
                 .Include(p => p.ActedInMovies)
                 .Include(p => p.WrittenMovies);
+        }
+
+        public IQueryable<Person> GetPersonsByIds(IEnumerable<int> ids)
+        {
+            return _context.Persons
+                .Where(p => ids.Contains(p.Id));
         }
 
         public Person? GetPerson(int id)
