@@ -12,13 +12,13 @@ namespace MovieDatabaseBackend.Services
         public Result<IEnumerable<GenreDto>> GetGenres()
         {
             var genres = _uof.Genres.GetGenres();
-            if (genres is null)
+            if (genres.Any())
             {
-                return Result<IEnumerable<GenreDto>>.Fail(ResultState.NotFound);
+                return Result<IEnumerable<GenreDto>>.Ok(genres.Select(g => new GenreDto { Id = g.Id, Name = g.Name }));
             }
             else
             {
-                return Result<IEnumerable<GenreDto>>.Ok(genres.Select(g => new GenreDto { Id = g.Id, Name = g.Name }));
+                return Result<IEnumerable<GenreDto>>.Fail(ResultState.NotFound);
             }
         }
 

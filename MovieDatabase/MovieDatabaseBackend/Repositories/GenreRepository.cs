@@ -11,7 +11,7 @@ namespace MovieDatabaseBackend.Repositories
         public IQueryable<Genre> GetGenres()
         {
             return _context.Genres
-                .Include(p => p.Movies);
+                .Include(g => g.Movies);
         }
 
         public IQueryable<Genre> GetGenresByIds(IEnumerable<int> ids)
