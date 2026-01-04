@@ -55,14 +55,14 @@
             else
             {
                 <TableRow>
-                    <TableRowCell>Es sind keine Filme vorhanden.</TableRowCell>
+                    <TableRowCell ColumnSpan="2">Es sind keine Filme vorhanden.</TableRowCell>
                 </TableRow>
             }
         }
         else
         {
             <TableRow>
-                <TableRowCell>Filme werden geladen ...</TableRowCell>
+                <TableRowCell ColumnSpan="2">Filme werden geladen ...</TableRowCell>
             </TableRow>
         }
     </TableBody>
@@ -94,14 +94,16 @@
                 if (movieModalMode == MovieModalMode.View)
                 {
                     <Text>Titel: @selectedMovie.Title</Text>
+                    <Text>Handlung: @selectedMovie.Plot</Text>
+                    <Text>Erscheinungsdatum: @selectedMovie.ReleaseDate?.ToString("dd.MM.yyyy")</Text>
                 }
                 else
                 {
                     <Validations @ref="validations">
                         <Validation Validator="ValidationRule.IsNotEmpty">
-                            <Field Horizontal>
-                                <FieldLabel RequiredIndicator ColumnSize="ColumnSize.Is2">Titel</FieldLabel>
-                                <FieldBody ColumnSize="ColumnSize.Is5">
+                            <Field>
+                                <FieldLabel RequiredIndicator>Titel</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull">
                                     <TextEdit @bind-Text="selectedMovie.Title">
                                         <Feedback>
                                             <ValidationError>Titel ist erforderlich.</ValidationError>
@@ -110,6 +112,43 @@
                                 </FieldBody>
                             </Field>
                         </Validation>
+                        <Field>
+                            <FieldLabel>Handlung</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.IsFull">
+                                <MemoEdit AutoSize @bind-Text="selectedMovie.Plot" />
+                            </FieldBody>
+                        </Field>
+                        <Field>
+                            <FieldLabel ColumnSize="ColumnSize.Is2">Erscheinungsdatum</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is10">
+                                <DateEdit TValue="DateTime?" @bind-Date="selectedMovie.ReleaseDate" />
+                            </FieldBody>
+                        </Field>
+                        <Field>
+                            <FieldLabel ColumnSize="ColumnSize.Is2">Bewertung</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is10">
+                                <Select TValue="int?" @bind-SelectedValue="selectedMovie.Rating">
+                                    <SelectItem Value="(int?)null">Bitte wählen...</SelectItem>
+                                    <SelectItem Value="1">1 Stern</SelectItem>
+                                    <SelectItem Value="2">2 Sterne</SelectItem>
+                                    <SelectItem Value="3">3 Sterne</SelectItem>
+                                    <SelectItem Value="4">4 Sterne</SelectItem>
+                                    <SelectItem Value="5">5 Sterne</SelectItem>
+                                </Select>
+                            </FieldBody>
+                        </Field>
+                        <Field>
+                            <FieldLabel ColumnSize="ColumnSize.Is2">FSK</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is10">
+                                <Select TValue="int?" @bind-SelectedValue="selectedMovie.AgeRating">
+                                    <SelectItem Value="(int?)null">Bitte wählen...</SelectItem>
+                                    <SelectItem Value="0">FSK 0</SelectItem>
+                                    <SelectItem Value="6">FSK 6</SelectItem>
+                                    <SelectItem Value="12">FSK 12</SelectItem>
+                                    <SelectItem Value="18">FSK 18</SelectItem>
+                                </Select>
+                            </FieldBody>
+                        </Field>
                     </Validations>
                 }
             }
@@ -140,18 +179,12 @@
 
 @code
 {
-    private List<MovieViewModel> allMovies = [];
+    private List<MovieViewModel>? allMovies;
 
     #region Lifecycle
 
-    protected override async Task OnInitializedAsync()
-    {
-        Console.WriteLine("OnInitializedAsync called.");
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine("OnAfterRenderAsync called.");
         if (firstRender)
         {
             allMovies = (await MovieService.GetMoviesAsync()).ToList();
@@ -240,14 +273,14 @@
                 var newMovie = await MovieService.CreateMovieAsync(selectedMovie);
                 if (newMovie is not null)
                 {
-                    allMovies.Add(newMovie);
+                    allMovies?.Add(newMovie);
                     StateHasChanged();
                 }
             }
             else if (movieModalMode == MovieModalMode.Edit)
             {
                 await MovieService.UpdateMovieAsync(selectedMovie);
-                allMovies.Find(m => m.Id == selectedMovie.Id)?.Title = selectedMovie.Title;
+                allMovies?.Find(m => m.Id == selectedMovie.Id)?.Title = selectedMovie.Title;
                 StateHasChanged();
             }
         }
@@ -268,7 +301,7 @@
         {
             if (await MovieService.DeleteMovieAsync(movie))
             {
-                allMovies.Remove(movie);
+                allMovies?.Remove(movie);
                 StateHasChanged();
             }
         });

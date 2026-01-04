@@ -44,14 +44,14 @@
             else
             {
                 <TableRow>
-                    <TableRowCell>Es sind keine Personen vorhanden.</TableRowCell>
+                    <TableRowCell ColumnSpan="3">Es sind keine Personen vorhanden.</TableRowCell>
                 </TableRow>
             }
         }
         else
         {
             <TableRow>
-                <TableRowCell>Personen werden geladen ...</TableRowCell>
+                <TableRowCell ColumnSpan="3">Personen werden geladen ...</TableRowCell>
             </TableRow>
         }
     </TableBody>
@@ -97,18 +97,12 @@
 
 @code
 {
-    private List<PersonViewModel> allPersons = [];
+    private List<PersonViewModel>? allPersons;
 
     #region Lifecycle
 
-    protected override async Task OnInitializedAsync()
-    {
-        Console.WriteLine("OnInitializedAsync called.");
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine("OnAfterRenderAsync called.");
         if (firstRender)
         {
             allPersons = (await PersonService.GetPersonsAsync()).ToList();
@@ -173,7 +167,7 @@
                 var newPerson = await PersonService.CreatePersonAsync(new PersonViewModel { Name = editingPerson });
                 if (newPerson is not null)
                 {
-                    allPersons.Add(newPerson);
+                    allPersons?.Add(newPerson);
                     StateHasChanged();
                 }
             }
@@ -203,7 +197,7 @@
         {
             if (await PersonService.DeletePersonAsync(person))
             {
-                allPersons.Remove(person);
+                allPersons?.Remove(person);
                 StateHasChanged();
             }
         });
