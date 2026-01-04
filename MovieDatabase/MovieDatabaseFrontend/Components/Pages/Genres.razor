@@ -44,14 +44,14 @@
             else
             {
                 <TableRow>
-                    <TableRowCell>Es sind keine Genres vorhanden.</TableRowCell>
+                    <TableRowCell ColumnSpan="3">Es sind keine Genres vorhanden.</TableRowCell>
                 </TableRow>
             }
         }
         else
         {
             <TableRow>
-                <TableRowCell>Genres werden geladen ...</TableRowCell>
+                <TableRowCell ColumnSpan="3">Genres werden geladen ...</TableRowCell>
             </TableRow>
         }
     </TableBody>
@@ -97,18 +97,12 @@
 
 @code
 {
-    private List<GenreViewModel> allGenres = [];
+    private List<GenreViewModel>? allGenres;
 
     #region Lifecycle
 
-    protected override async Task OnInitializedAsync()
-    {
-        Console.WriteLine("OnInitializedAsync called.");
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine("OnAfterRenderAsync called.");
         if (firstRender)
         {
             allGenres = (await GenreService.GetGenresAsync()).ToList();
@@ -173,7 +167,7 @@
                 var newGenre = await GenreService.CreateGenreAsync(new GenreViewModel { Name = editingGenre });
                 if (newGenre is not null)
                 {
-                    allGenres.Add(newGenre);
+                    allGenres?.Add(newGenre);
                     StateHasChanged();
                 }
             }
@@ -203,7 +197,7 @@
         {
             if (await GenreService.DeleteGenreAsync(genre))
             {
-                allGenres.Remove(genre);
+                allGenres?.Remove(genre);
                 StateHasChanged();
             }
         });
