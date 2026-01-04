@@ -60,3 +60,6 @@ MovieDatabase/.vs
 *.db
 *.db-wal
 *.db-shm
+
+# Solution
+*.slnLaunch.user
