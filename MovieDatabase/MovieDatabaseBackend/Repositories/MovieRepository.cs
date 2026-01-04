@@ -8,14 +8,13 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
-        public IQueryable<Movie> GetMovies(string? title = null)
+        public IQueryable<Movie> GetMovies()
         {
             return _context.Movies
                 .Include(m => m.Genres)
                 .Include(m => m.Directors)
                 .Include(m => m.Actors)
-                .Include(m => m.Writer)
-                .Where(m => title == null || m.Title.Contains(title));
+                .Include(m => m.Writer);
         }
 
         public Movie? GetMovie(int id)

@@ -11,7 +11,8 @@ namespace MovieDatabaseBackend.Services
 
         public Result<IEnumerable<MovieDto>> GetMovies(string? title = null)
         {
-            var movies = _uof.Movies.GetMovies(title);
+            var movies = _uof.Movies.GetMovies()
+                .Where(m => title == null || m.Title.ToLower().Contains(title.ToLower()));
             if (movies.Any())
             {
                 return Result<IEnumerable<MovieDto>>.Ok(movies.Select(m => new MovieDto { Id = m.Id, Title = m.Title }));
