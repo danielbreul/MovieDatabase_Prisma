@@ -87,13 +87,15 @@
 
 <Warning @ref="discardWarning"
          WarningTitle="Änderungen verwerfen?"
-         WarningMessage="Möchten Sie die Änderungen wirklich verwerfen?"
-         ConfirmButtonText="Änderungen verwerfen" />
+         ConfirmButtonText="Änderungen verwerfen">
+    <Text>Möchten Sie die Änderungen wirklich verwerfen?</Text>
+</Warning>
 
 <Warning @ref="deleteWarning"
          WarningTitle="Person löschen?"
-         WarningMessage='@("Möchten Sie die Person \"" + deletingPerson + "\" wirklich unwiderruflich löschen?")'
-         ConfirmButtonText="Person löschen" />
+         ConfirmButtonText="Person löschen">
+    <Text>Möchten Sie die Person <strong>@deletingPerson</strong> wirklich unwiderruflich löschen?</Text>
+</Warning>
 
 @code
 {

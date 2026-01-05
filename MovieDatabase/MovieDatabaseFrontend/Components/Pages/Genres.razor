@@ -87,13 +87,15 @@
 
 <Warning @ref="discardWarning"
          WarningTitle="Änderungen verwerfen?"
-         WarningMessage="Möchten Sie die Änderungen wirklich verwerfen?"
-         ConfirmButtonText="Änderungen verwerfen" />
+         ConfirmButtonText="Änderungen verwerfen">
+    <Text>Möchten Sie die Änderungen wirklich verwerfen?</Text>
+</Warning>
 
 <Warning @ref="deleteWarning"
          WarningTitle="Genre löschen?"
-         WarningMessage='@("Möchten Sie das Genre \"" + deletingGenre + "\" wirklich unwiderruflich löschen?")'
-         ConfirmButtonText="Genre löschen" />
+         ConfirmButtonText="Genre löschen">
+    <Text>Möchten Sie das Genre <strong>@deletingGenre</strong> wirklich unwiderruflich löschen?</Text>
+</Warning>
 
 @code
 {

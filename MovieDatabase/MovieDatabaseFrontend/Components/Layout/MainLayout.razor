@@ -8,13 +8,13 @@
                  Mode="BarMode.Horizontal"
                  Breakpoint="Breakpoint.Desktop">
                 <BarBrand Margin="Margin.Is4.OnX">
-                    <BarLink href="">Film Datenbank</BarLink>
+                    <BarLink href="movies">Film Datenbank</BarLink>
                 </BarBrand>
                 <BarToggler />
                 <BarMenu>
                     <BarStart>
                         <BarItem>
-                            <BarLink href="" Match="Match.All">Movies</BarLink>
+                            <BarLink href="movies" Match="Match.Prefix">Movies</BarLink>
                         </BarItem>
                         <BarItem>
                             <BarLink href="genres" Match="Match.Prefix">Genres</BarLink>
@@ -37,6 +37,10 @@
     private Theme theme = new Theme
     {
         BackgroundOptions = new ThemeBackgroundOptions
+        {
+            Primary = "#1B263B"
+        },
+        ColorOptions = new ThemeColorOptions
         {
             Primary = "#1B263B"
         }

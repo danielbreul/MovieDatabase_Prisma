@@ -4,7 +4,7 @@
             <ModalTitle>@WarningTitle</ModalTitle>
         </ModalHeader>
         <ModalBody>
-            <Text>@WarningMessage</Text>
+            @ChildContent
         </ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="OnAbortClicked">Abbrechen</Button>
@@ -16,7 +16,7 @@
 @code
 {
     [Parameter] public string? WarningTitle { get; set; }
-    [Parameter] public string? WarningMessage { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string? ConfirmButtonText { get; set; }
 
     private Modal modal = null!;

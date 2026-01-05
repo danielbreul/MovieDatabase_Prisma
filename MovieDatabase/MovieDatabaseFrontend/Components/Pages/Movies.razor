@@ -1,7 +1,8 @@
-﻿@page "/"
+﻿@page "/movies"
 @inject IMovieService MovieService
 @inject IGenreService GenreService
 @inject IPersonService PersonService
+@inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
 <PageTitle>Filme</PageTitle>
@@ -10,7 +11,7 @@
 
 <Row>
     <Column ColumnSize="ColumnSize.IsAuto">
-        <Button Color="Color.Primary" Clicked="CreateMovie">
+        <Button Color="Color.Primary" Clicked="CreateMovieAsync">
             <Icon Name="IconName.Add" />
             Neuer Film
         </Button>
@@ -44,7 +45,7 @@
             {
                 foreach (var movie in allMovies)
                 {
-                    <TableRow HoverCursor="Cursor.Pointer" Clicked="() => ShowMovieModal(movie)">
+                    <TableRow HoverCursor="Cursor.Pointer" Clicked='() => NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameter("id", movie.Id))'>
                         <TableRowCell>@movie.Title</TableRowCell>
                         <TableRowCell TextAlignment="TextAlignment.Center">
                             <Button Color="Color.Primary" Size="Size.Small" Clicked="@(() => DeleteMovie(movie))" @onclick:stopPropagation>
@@ -83,7 +84,7 @@
                 <Button Margin="Margin.Is3.FromStart"
                         Color="Color.Primary"
                         Size="Size.Small"
-                        Clicked="EditMovie"
+                        Clicked="EditMovieAsync"
                         @onclick:stopPropagation>
                     <Icon Name="IconName.Edit" />
                     Bearbeiten
@@ -430,12 +431,12 @@
         <ModalFooter>
             @if (movieModalMode == MovieModalMode.View)
             {
-                <Button Color="Color.Primary" Clicked="CloseMovieModalAsync">Schließen</Button>
+                <Button Color="Color.Primary" Clicked='() => NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameter("id", (int?)null))'>Schließen</Button>
             }
             else
             {
                 <Button Color="Color.Secondary" Clicked="AbortMovieModal">Abbrechen</Button>
-                <Button Color="Color.Primary" Clicked="SaveMovie">Speichern</Button>
+                <Button Color="Color.Primary" Clicked="SaveMovieAsync">Speichern</Button>
             }
         </ModalFooter>
     </ModalContent>
@@ -480,30 +481,91 @@
 
 <Warning @ref="discardWarning"
          WarningTitle="Änderungen verwerfen?"
-         WarningMessage="Möchten Sie die Änderungen wirklich verwerfen?"
-         ConfirmButtonText="Änderungen verwerfen" />
+         ConfirmButtonText="Änderungen verwerfen">
+    <Text>Möchten Sie die Änderungen wirklich verwerfen?</Text>
+</Warning>
 
 <Warning @ref="deleteWarning"
          WarningTitle="Film löschen?"
-         WarningMessage='@("Möchten Sie den Film \"" + deletingMovie + "\" wirklich unwiderruflich löschen?")'
-         ConfirmButtonText="Film löschen" />
+         ConfirmButtonText="Film löschen">
+    <Text>Möchten Sie den Film <strong>@deletingMovie</strong> wirklich löschen?</Text>
+</Warning>
 
 @code
 {
+    [SupplyParameterFromQuery(Name = "search")]
+    public string? SearchQuery { get; set; }
+    private string? previousSearch;
+    [SupplyParameterFromQuery(Name = "id")]
+    public int? Id { get; set; }
+    private int? previousId;
+
     private List<MovieViewModel>? allMovies;
     private List<PersonViewModel>? allPersons;
     private List<GenreViewModel>? allGenres;
 
     #region Lifecycle
 
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     // allGenres = (await GenreService.GetGenresAsync()).ToList();
+    //     // allPersons = (await PersonService.GetPersonsAsync()).ToList();
+    // }
+
+    private bool rendered = false;
+    private bool firstProcessParameters = true;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            allMovies = (await MovieService.GetMoviesAsync()).ToList();
+            Console.WriteLine("FirstRender");
+            rendered = true;
+            await ProcessParameters();
             allGenres = (await GenreService.GetGenresAsync()).ToList();
             allPersons = (await PersonService.GetPersonsAsync()).ToList();
-            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ProcessParameters();
+    }
+
+    private async Task ProcessParameters()
+    {
+        if (rendered)
+        {
+            Console.WriteLine("ProcessParameters: " + firstProcessParameters);
+            if (previousId != Id || firstProcessParameters)
+            {
+                if (Id is not null)
+                {
+                    await ShowMovieModalAsync(Id.Value);
+                }
+                else
+                {
+                    await CloseMovieModalAsync();
+                }
+            }
+
+            if (previousSearch != SearchQuery || firstProcessParameters)
+            {
+                if (!string.IsNullOrWhiteSpace(SearchQuery))
+                {
+                    allMovies = (await MovieService.GetMoviesAsync(SearchQuery)).ToList();
+                }
+                else
+                {
+                    allMovies = (await MovieService.GetMoviesAsync()).ToList();
+                }
+
+                StateHasChanged();
+            }
+
+            previousSearch = SearchQuery;
+            previousId = Id;
+            firstProcessParameters = false;
         }
     }
 
@@ -523,8 +585,12 @@
 
     private async Task PerformSearch()
     {
-        allMovies = (await MovieService.GetMoviesAsync(searchText)).ToList();
-        StateHasChanged();
+        var escaped = searchText == string.Empty ? null : Uri.EscapeDataString(searchText);
+
+        if (escaped != SearchQuery)
+        {
+            NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameter("search", escaped));
+        }
     }
 
     #endregion
@@ -683,7 +749,7 @@
         availableActors = allPersons?.Where(p => !selectedMovie?.Actors.Any(p1 => p1.Id == p.Id) ?? true).ToList();
     }
 
-    private async Task CreateMovie()
+    private async Task CreateMovieAsync()
     {
         selectedMovie = new MovieDetailViewModel();
         UpdateAvailableSelections();
@@ -692,18 +758,25 @@
         await movieModal.Show();
     }
 
-    private async Task EditMovie()
+    private async Task EditMovieAsync()
     {
         UpdateAvailableSelections();
         movieModalMode = MovieModalMode.Edit;
     }
 
-    private async Task ShowMovieModal(MovieViewModel movie)
+    private async Task ShowMovieModalAsync(int id)
     {
-        selectedMovie = await MovieService.GetMovieDetailAsync(movie.Id);
+        selectedMovie = await MovieService.GetMovieDetailAsync(id);
         movieModalMode = MovieModalMode.View;
         cancelClose = true;
         await movieModal.Show();
+    }
+
+    private async Task CloseMovieModalAsync()
+    {
+        cancelClose = false;
+        await movieModal.Hide();
+        selectedMovie = null;
     }
 
     private Task OnMovieModalOpening(ModalOpeningEventArgs e)
@@ -718,14 +791,7 @@
         return Task.CompletedTask;
     }
 
-    private async Task CloseMovieModalAsync()
-    {
-        cancelClose = false;
-        await movieModal.Hide();
-        selectedMovie = null;
-    }
-
-    private async Task SaveMovie()
+    private async Task SaveMovieAsync()
     {
         if (selectedMovie is not null && (validations?.AllValidationsSuccessful ?? false))
         {
@@ -736,6 +802,7 @@
                 {
                     allMovies?.Add(newMovie);
                     StateHasChanged();
+                    NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameter("id", newMovie.Id));
                 }
             }
             else if (movieModalMode == MovieModalMode.Edit)
@@ -745,14 +812,14 @@
                     allMovies?.Find(m => m.Id == selectedMovie.Id)?.Title = selectedMovie.Title;
                     StateHasChanged();
                 }
+                movieModalMode = MovieModalMode.View;
             }
         }
-        movieModalMode = MovieModalMode.View;
     }
 
-    private async Task HandleAbortMovieModal()
+    private async Task HandleAbortMovieModalAsync()
     {
-        if (selectedMovie is not null)
+        if (selectedMovie is not null && movieModalMode == MovieModalMode.Edit)
         {
             selectedMovie = await MovieService.GetMovieDetailAsync(selectedMovie.Id);
             movieModalMode = MovieModalMode.View;
@@ -793,7 +860,7 @@
 
     private Task AbortMovieModal()
     {
-        discardWarning.Show(HandleAbortMovieModal);
+        discardWarning.Show(HandleAbortMovieModalAsync);
         return Task.CompletedTask;
     }
 
