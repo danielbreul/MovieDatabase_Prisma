@@ -18,7 +18,7 @@ namespace MovieDatabaseFrontend.Services
                 {
                     title = "/search?title=" + WebUtility.UrlEncode(title);
                 }
-                var response = await httpClient.GetAsync("http://localhost:5172/movies" + title);
+                var response = await httpClient.GetAsync("movies" + title);
                 if (response.IsSuccessStatusCode)
                 {
                     moviesDto = await response.Content.ReadFromJsonAsync<IEnumerable<MovieDto>>();
@@ -45,7 +45,7 @@ namespace MovieDatabaseFrontend.Services
             MovieDetailDto? movieDetailDto = null;
             try
             {
-                var response = await httpClient.GetAsync("http://localhost:5172/movies/" + movie.Id);
+                var response = await httpClient.GetAsync("movies/" + movie.Id);
                 if (response.IsSuccessStatusCode)
                 {
                     movieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
@@ -79,7 +79,7 @@ namespace MovieDatabaseFrontend.Services
             MovieDetailDto? createdMovieDetailDto = null;
             try
             {
-                var response = await httpClient.PostAsJsonAsync("http://localhost:5172/movies/", MovieViewModelToDto(movie));
+                var response = await httpClient.PostAsJsonAsync("movies/", MovieViewModelToDto(movie));
                 if (response.IsSuccessStatusCode)
                 {
                     createdMovieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
@@ -116,7 +116,7 @@ namespace MovieDatabaseFrontend.Services
         {
             try
             {
-                var response = await httpClient.PutAsJsonAsync("http://localhost:5172/movies/" + movie.Id, MovieViewModelToDto(movie));
+                var response = await httpClient.PutAsJsonAsync("movies/" + movie.Id, MovieViewModelToDto(movie));
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Der Film konnte nicht bearbeitet werden, da er in der Datenbank nicht existiert.");
@@ -149,7 +149,7 @@ namespace MovieDatabaseFrontend.Services
         {
             try
             {
-                var response = await httpClient.DeleteAsync("http://localhost:5172/movies/" + movie.Id);
+                var response = await httpClient.DeleteAsync("movies/" + movie.Id);
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Der Film konnte nicht gelöscht werden, da er in der Datenbank nicht existiert.");

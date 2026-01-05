@@ -14,7 +14,7 @@ namespace MovieDatabaseFrontend.Services
             IEnumerable<PersonDto>? personsDto = null;
             try
             {
-                var response = await httpClient.GetAsync("http://localhost:5172/persons");
+                var response = await httpClient.GetAsync("persons");
                 if (response.IsSuccessStatusCode)
                 {
                     personsDto = await response.Content.ReadFromJsonAsync<IEnumerable<PersonDto>>();
@@ -41,7 +41,7 @@ namespace MovieDatabaseFrontend.Services
             PersonDto? createdPersonDto = null;
             try
             {
-                var response = await httpClient.PostAsJsonAsync("http://localhost:5172/persons/", new PersonCreateUpdateDto { Name = person.Name });
+                var response = await httpClient.PostAsJsonAsync("persons/", new PersonCreateUpdateDto { Name = person.Name });
                 if (response.IsSuccessStatusCode)
                 {
                     createdPersonDto = await response.Content.ReadFromJsonAsync<PersonDto>();
@@ -78,7 +78,7 @@ namespace MovieDatabaseFrontend.Services
         {
             try
             {
-                var response = await httpClient.PutAsJsonAsync("http://localhost:5172/persons/" + person.Id, new PersonCreateUpdateDto { Name = person.Name });
+                var response = await httpClient.PutAsJsonAsync("persons/" + person.Id, new PersonCreateUpdateDto { Name = person.Name });
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Die Person konnte nicht bearbeitet werden, da sie in der Datenbank nicht existiert.");
@@ -111,7 +111,7 @@ namespace MovieDatabaseFrontend.Services
         {
             try
             {
-                var response = await httpClient.DeleteAsync("http://localhost:5172/persons/" + person.Id);
+                var response = await httpClient.DeleteAsync("persons/" + person.Id);
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Die Person konnte nicht gelöscht werden, da sie in der Datenbank nicht existiert.");
@@ -138,6 +138,48 @@ namespace MovieDatabaseFrontend.Services
                 errorService.LogError(e);
             }
             return false;
+        }
+
+        public Task<IEnumerable<MovieViewModel>> GetDirectedMoviesAsync(int id)
+        {
+            return GetMoviesAsync(id, "directed-movies");
+        }
+
+        public Task<IEnumerable<MovieViewModel>> GetWrittenMoviesAsync(int id)
+        {
+            return GetMoviesAsync(id, "written-movies");
+        }
+
+        public Task<IEnumerable<MovieViewModel>> GetActedInMoviesAsync(int id)
+        {
+            return GetMoviesAsync(id, "acted-in-movies");
+        }
+
+        private async Task<IEnumerable<MovieViewModel>> GetMoviesAsync(int id, string url)
+        {
+            IEnumerable<MovieDto>? moviesDto = null;
+            try
+            {
+                var response = await httpClient.GetAsync($"persons/{id}/{url}");
+                if (response.IsSuccessStatusCode)
+                {
+                    moviesDto = await response.Content.ReadFromJsonAsync<IEnumerable<MovieDto>>();
+                }
+                else if (response.StatusCode != HttpStatusCode.NoContent)
+                {
+                    errorService.LogHttpResponse(response);
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                errorService.LogMessage("Die Verbindung zum Backend ist unterbrochen: " + e.Message);
+            }
+            catch (Exception e)
+            {
+                errorService.LogError(e);
+            }
+
+            return moviesDto?.Select(x => new MovieViewModel { Id = x.Id, Title = x.Title }) ?? [];
         }
     }
 }

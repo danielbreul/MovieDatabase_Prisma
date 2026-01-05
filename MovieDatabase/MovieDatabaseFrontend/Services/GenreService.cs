@@ -14,7 +14,7 @@ namespace MovieDatabaseFrontend.Services
             IEnumerable<GenreDto>? genresDto = null;
             try
             {
-                var response = await httpClient.GetAsync("http://localhost:5172/genres");
+                var response = await httpClient.GetAsync("genres");
                 if (response.IsSuccessStatusCode)
                 {
                     genresDto = await response.Content.ReadFromJsonAsync<IEnumerable<GenreDto>>();
@@ -41,7 +41,7 @@ namespace MovieDatabaseFrontend.Services
             GenreDto? createdGenreDto = null;
             try
             {
-                var response = await httpClient.PostAsJsonAsync("http://localhost:5172/genres/", new GenreCreateUpdateDto { Name = genre.Name });
+                var response = await httpClient.PostAsJsonAsync("genres/", new GenreCreateUpdateDto { Name = genre.Name });
                 if (response.IsSuccessStatusCode)
                 {
                     createdGenreDto = await response.Content.ReadFromJsonAsync<GenreDto>();
@@ -78,7 +78,7 @@ namespace MovieDatabaseFrontend.Services
         {
             try
             {
-                var response = await httpClient.PutAsJsonAsync("http://localhost:5172/genres/" + genre.Id, new GenreCreateUpdateDto { Name = genre.Name });
+                var response = await httpClient.PutAsJsonAsync("genres/" + genre.Id, new GenreCreateUpdateDto { Name = genre.Name });
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Das Genre konnte nicht bearbeitet werden, da es in der Datenbank nicht existiert.");
@@ -111,7 +111,7 @@ namespace MovieDatabaseFrontend.Services
         {
             try
             {
-                var response = await httpClient.DeleteAsync("http://localhost:5172/genres/" + genre.Id);
+                var response = await httpClient.DeleteAsync("genres/" + genre.Id);
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Das Genre konnte nicht gelöscht werden, da es in der Datenbank nicht existiert.");
@@ -138,6 +138,33 @@ namespace MovieDatabaseFrontend.Services
                 errorService.LogError(e);
             }
             return false;
+        }
+
+        public async Task<IEnumerable<MovieViewModel>> GetMoviesAsync(int id)
+        {
+            IEnumerable<MovieDto>? moviesDto = null;
+            try
+            {
+                var response = await httpClient.GetAsync($"genres/{id}/movies");
+                if (response.IsSuccessStatusCode)
+                {
+                    moviesDto = await response.Content.ReadFromJsonAsync<IEnumerable<MovieDto>>();
+                }
+                else if (response.StatusCode != HttpStatusCode.NoContent)
+                {
+                    errorService.LogHttpResponse(response);
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                errorService.LogMessage("Die Verbindung zum Backend ist unterbrochen: " + e.Message);
+            }
+            catch (Exception e)
+            {
+                errorService.LogError(e);
+            }
+
+            return moviesDto?.Select(x => new MovieViewModel { Id = x.Id, Title = x.Title }) ?? [];
         }
     }
 }

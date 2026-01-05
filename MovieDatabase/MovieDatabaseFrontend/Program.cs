@@ -18,7 +18,12 @@ builder.Services
     .AddBootstrap5Providers()
     .AddFontAwesomeIcons();
 
-builder.Services.AddHttpClient();
+var apiBaseAddress = builder.Configuration.GetValue<string>("ApiBaseAddress") ?? "http://localhost:5172/";
+
+builder.Services.AddHttpClient(string.Empty, client =>
+{
+    client.BaseAddress = new Uri(apiBaseAddress);
+});
 builder.Services.AddScoped<IErrorService, ErrorService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IPersonService, PersonService>();
