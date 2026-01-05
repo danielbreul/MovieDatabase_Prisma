@@ -15,7 +15,7 @@ namespace MovieDatabaseFrontend.Services
             try
             {
                 var response = await httpClient.GetAsync("persons");
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     personsDto = await response.Content.ReadFromJsonAsync<IEnumerable<PersonDto>>();
                 }
@@ -41,8 +41,8 @@ namespace MovieDatabaseFrontend.Services
             PersonDto? createdPersonDto = null;
             try
             {
-                var response = await httpClient.PostAsJsonAsync("persons/", new PersonCreateUpdateDto { Name = person.Name });
-                if (response.IsSuccessStatusCode)
+                var response = await httpClient.PostAsJsonAsync("persons", new PersonCreateUpdateDto { Name = person.Name });
+                if (response.StatusCode == HttpStatusCode.Created)
                 {
                     createdPersonDto = await response.Content.ReadFromJsonAsync<PersonDto>();
                 }
@@ -79,7 +79,11 @@ namespace MovieDatabaseFrontend.Services
             try
             {
                 var response = await httpClient.PutAsJsonAsync("persons/" + person.Id, new PersonCreateUpdateDto { Name = person.Name });
-                if (response.StatusCode == HttpStatusCode.NotFound)
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    return true;
+                }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Die Person konnte nicht bearbeitet werden, da sie in der Datenbank nicht existiert.");
                 }
@@ -87,13 +91,9 @@ namespace MovieDatabaseFrontend.Services
                 {
                     errorService.LogHttpResponse(response, "Die Person enthält fehlerhafte Daten und konnte deshalb nicht gespeichert werden.");
                 }
-                else if (!response.IsSuccessStatusCode)
-                {
-                    errorService.LogHttpResponse(response);
-                }
                 else
                 {
-                    return true;
+                    errorService.LogHttpResponse(response);
                 }
             }
             catch (HttpRequestException e)
@@ -112,7 +112,11 @@ namespace MovieDatabaseFrontend.Services
             try
             {
                 var response = await httpClient.DeleteAsync("persons/" + person.Id);
-                if (response.StatusCode == HttpStatusCode.NotFound)
+                if (response.StatusCode == HttpStatusCode.NoContent)
+                {
+                    return true;
+                }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Die Person konnte nicht gelöscht werden, da sie in der Datenbank nicht existiert.");
                 }
@@ -120,13 +124,9 @@ namespace MovieDatabaseFrontend.Services
                 {
                     errorService.LogMessage("Die Person konnte nicht gelöscht werden, da sie in mindestens einem Film referenziert ist.");
                 }
-                else if (!response.IsSuccessStatusCode)
-                {
-                    errorService.LogHttpResponse(response);
-                }
                 else
                 {
-                    return true;
+                    errorService.LogHttpResponse(response);
                 }
             }
             catch (HttpRequestException e)
@@ -161,7 +161,7 @@ namespace MovieDatabaseFrontend.Services
             try
             {
                 var response = await httpClient.GetAsync($"persons/{id}/{url}");
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     moviesDto = await response.Content.ReadFromJsonAsync<IEnumerable<MovieDto>>();
                 }
