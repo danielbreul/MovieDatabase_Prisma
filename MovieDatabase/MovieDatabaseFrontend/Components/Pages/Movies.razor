@@ -406,6 +406,43 @@
     </ModalContent>
 </Modal>
 
+<Modal @ref="relatedMoviesModal" Closing="OnRelatedMovieModalClosing">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>
+                @switch (relationType)
+                {
+                    case RelationType.Genre:
+                        @:(Filme im Genre <strong>@personOrGenreName</strong>);
+                        break;
+                    case RelationType.Director:
+                        @:(Filme, in denen <strong>@personOrGenreName</strong> als Regisseur agiert);
+                        break;
+                    case RelationType.Writer:
+                        @:(Filme, die von <strong>@personOrGenreName</strong> geschrieben wurden);
+                        break;
+                    case RelationType.Actor:
+                        @:(Filme, in denen <strong>@personOrGenreName</strong> als Hauptdarsteller agiert);
+                        break;
+                }
+            </ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+            <ListGroup>
+                @foreach (MovieViewModel movie in relatedMovies ?? [])
+                {
+                    <ListGroupItem>
+                        @movie.Title
+                    </ListGroupItem>
+                }
+            </ListGroup>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="CloseRelatedMoviesModalAsync">Schließen</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
 <Warning @ref="discardWarning"
          WarningTitle="Änderungen verwerfen?"
          WarningMessage="Möchten Sie die Änderungen wirklich verwerfen?"
@@ -453,6 +490,56 @@
     {
         allMovies = (await MovieService.GetMoviesAsync(searchText)).ToList();
         StateHasChanged();
+    }
+
+    #endregion
+
+    #region Occuring Movies Modal
+
+    private Modal relatedMoviesModal = null!;
+    private IEnumerable<MovieViewModel>? relatedMovies;
+    private string personOrGenreName = string.Empty;
+    private RelationType relationType;
+    private enum RelationType
+    {
+        Genre,
+        Director,
+        Writer,
+        Actor
+    }
+
+    private async Task ShowRelatedMoviesModalAsync(int id, string name, RelationType type)
+    {
+        relationType = type;
+        personOrGenreName = name;
+        switch (type)
+        {
+            case RelationType.Genre:
+                relatedMovies = await GenreService.GetMoviesAsync(id);
+                break;
+            case RelationType.Director:
+                relatedMovies = await PersonService.GetDirectedMoviesAsync(id);
+                break;
+            case RelationType.Writer:
+                relatedMovies = await PersonService.GetWrittenMoviesAsync(id);
+                break;
+            case RelationType.Actor:
+                relatedMovies = await PersonService.GetActedInMoviesAsync(id);
+                break;
+        }
+        await relatedMoviesModal.Show();
+    }
+
+    private Task OnRelatedMovieModalClosing(ModalClosingEventArgs e)
+    {
+        relatedMovies = null;
+        personOrGenreName = string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private async Task CloseRelatedMoviesModalAsync()
+    {
+        await relatedMoviesModal.Hide();
     }
 
     #endregion
