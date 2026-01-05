@@ -195,7 +195,7 @@
         deletingPerson = person.Name;
         deleteWarning.Show(async () =>
         {
-            if (await PersonService.DeletePersonAsync(person))
+            if (await PersonService.DeletePersonAsync(person.Id))
             {
                 allPersons?.Remove(person);
                 StateHasChanged();

@@ -107,11 +107,11 @@ namespace MovieDatabaseFrontend.Services
             return false;
         }
 
-        public async Task<bool> DeletePersonAsync(PersonViewModel person)
+        public async Task<bool> DeletePersonAsync(int id)
         {
             try
             {
-                var response = await httpClient.DeleteAsync("persons/" + person.Id);
+                var response = await httpClient.DeleteAsync("persons/" + id);
                 if (response.StatusCode == HttpStatusCode.NoContent)
                 {
                     return true;

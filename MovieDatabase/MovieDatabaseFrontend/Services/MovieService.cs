@@ -40,12 +40,12 @@ namespace MovieDatabaseFrontend.Services
             return moviesDto?.Select(x => new MovieViewModel { Id = x.Id, Title = x.Title }) ?? [];
         }
 
-        public async Task<MovieDetailViewModel?> GetMovieDetailAsync(MovieViewModel movie)
+        public async Task<MovieDetailViewModel?> GetMovieDetailAsync(int id)
         {
             MovieDetailDto? movieDetailDto = null;
             try
             {
-                var response = await httpClient.GetAsync("movies/" + movie.Id);
+                var response = await httpClient.GetAsync("movies/" + id);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     movieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
@@ -145,11 +145,11 @@ namespace MovieDatabaseFrontend.Services
             return false;
         }
 
-        public async Task<bool> DeleteMovieAsync(MovieViewModel movie)
+        public async Task<bool> DeleteMovieAsync(int id)
         {
             try
             {
-                var response = await httpClient.DeleteAsync("movies/" + movie.Id);
+                var response = await httpClient.DeleteAsync("movies/" + id);
                 if (response.StatusCode == HttpStatusCode.NoContent)
                 {
                     return true;

@@ -110,7 +110,7 @@
                         <Column ColumnSize="ColumnSize.Is8">
                             @* scrollable paragraph *@
                             <Paragraph Style="max-height:50px; overflow-y:auto; white-space: pre-line;">
-                                @selectedMovie.Plot
+                                @(selectedMovie.Plot is not null ? selectedMovie.Plot : "-")
                             </Paragraph>
                         </Column>
                     </Row>
@@ -119,7 +119,7 @@
                             <strong>Erscheinungsdatum</strong>
                         </Column>
                         <Column ColumnSize="ColumnSize.Is8">
-                            @selectedMovie.ReleaseDate?.ToString("dd.MM.yyyy")
+                            @(selectedMovie.ReleaseDate is not null ? selectedMovie.ReleaseDate?.ToString("dd.MM.yyyy") : "-")
                         </Column>
                     </Row>
                     <Row Margin="Margin.Is2.OnY">
@@ -143,17 +143,24 @@
                             <strong>Genre(s)</strong>
                         </Column>
                         <Column ColumnSize="ColumnSize.Is8">
-                            @foreach (GenreViewModel genre in selectedMovie.Genres)
+                            @if (selectedMovie.Genres.Any())
                             {
-                                <Badge Color="Color.Primary"
-                                        Margin="Margin.Is1.FromEnd.Is1.FromBottom"
-                                        Padding="Padding.Is2"
-                                        TextWeight="TextWeight.Normal"
-                                        TextSize="TextSize.Small"
-                                        style="cursor: pointer;"
-                                        @onclick="() => Console.WriteLine()">
-                                    @genre.Name
-                                </Badge>
+                                @foreach (GenreViewModel genre in selectedMovie.Genres)
+                                {
+                                    <Badge Color="Color.Primary"
+                                            Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                            Padding="Padding.Is2"
+                                            TextWeight="TextWeight.Normal"
+                                            TextSize="TextSize.Small"
+                                            style="cursor: pointer;"
+                                            @onclick="() => ShowRelatedMoviesModalAsync(genre.Id, genre.Name, RelationType.Genre)">
+                                        @genre.Name
+                                    </Badge>
+                                }
+                            }
+                            else
+                            {
+                                @:-
                             }
                         </Column>
                     </Row>
@@ -162,17 +169,24 @@
                             <strong>Regie</strong>
                         </Column>
                         <Column ColumnSize="ColumnSize.Is8">
-                            @foreach (PersonViewModel person in selectedMovie.Directors)
+                            @if (selectedMovie.Genres.Any())
                             {
-                                <Badge Color="Color.Primary"
-                                       Margin="Margin.Is1.FromEnd.Is1.FromBottom"
-                                       Padding="Padding.Is2"
-                                       TextWeight="TextWeight.Normal"
-                                       TextSize="TextSize.Small"
-                                       style="cursor: pointer;"
-                                       @onclick="() => Console.WriteLine()">
-                                    @person.Name
-                                </Badge>
+                                @foreach (PersonViewModel person in selectedMovie.Directors)
+                                {
+                                    <Badge Color="Color.Primary"
+                                           Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                           Padding="Padding.Is2"
+                                           TextWeight="TextWeight.Normal"
+                                           TextSize="TextSize.Small"
+                                           style="cursor: pointer;"
+                                           @onclick="() => ShowRelatedMoviesModalAsync(person.Id, person.Name, RelationType.Director)">
+                                        @person.Name
+                                    </Badge>
+                                }
+                            }
+                            else
+                            {
+                                @:-
                             }
                         </Column>
                     </Row>
@@ -181,23 +195,7 @@
                             <strong>Drehbuch</strong>
                         </Column>
                         <Column ColumnSize="ColumnSize.Is8">
-                            <Badge Color="Color.Primary"
-                                   Margin="Margin.Is1.FromEnd.Is1.FromBottom"
-                                   Padding="Padding.Is2"
-                                   TextWeight="TextWeight.Normal"
-                                   TextSize="TextSize.Small"
-                                   style="cursor: pointer;"
-                                   @onclick="() => Console.WriteLine()">
-                                @selectedMovie.Writer?.Name
-                            </Badge>
-                        </Column>
-                    </Row>
-                    <Row Margin="Margin.Is2.OnY">
-                        <Column ColumnSize="ColumnSize.Is4">
-                            <strong>Hauptdarsteller</strong>
-                        </Column>
-                        <Column ColumnSize="ColumnSize.Is8">
-                            @foreach (PersonViewModel person in selectedMovie.Actors)
+                            @if (selectedMovie.Writer is not null)
                             {
                                 <Badge Color="Color.Primary"
                                        Margin="Margin.Is1.FromEnd.Is1.FromBottom"
@@ -205,9 +203,39 @@
                                        TextWeight="TextWeight.Normal"
                                        TextSize="TextSize.Small"
                                        style="cursor: pointer;"
-                                       @onclick="() => Console.WriteLine()">
-                                    @person.Name
+                                       @onclick="() => ShowRelatedMoviesModalAsync(selectedMovie.Writer.Id, selectedMovie.Writer.Name, RelationType.Writer)">
+                                    @selectedMovie.Writer.Name
                                 </Badge>
+                            }
+                            else
+                            {
+                                @:-
+                            }
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is2.OnY">
+                        <Column ColumnSize="ColumnSize.Is4">
+                            <strong>Hauptdarsteller</strong>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8">
+                            @if (selectedMovie.Genres.Any())
+                            {
+                                @foreach (PersonViewModel person in selectedMovie.Actors)
+                                {
+                                    <Badge Color="Color.Primary"
+                                           Margin="Margin.Is1.FromEnd.Is1.FromBottom"
+                                           Padding="Padding.Is2"
+                                           TextWeight="TextWeight.Normal"
+                                           TextSize="TextSize.Small"
+                                           style="cursor: pointer;"
+                                           @onclick="() => ShowRelatedMoviesModalAsync(person.Id, person.Name, RelationType.Actor)">
+                                        @person.Name
+                                    </Badge>
+                                }
+                            }
+                            else
+                            {
+                                @:-
                             }
                         </Column>
                     </Row>
@@ -216,7 +244,14 @@
                             <strong>Laufzeit</strong>
                         </Column>
                         <Column ColumnSize="ColumnSize.Is8">
-                            @selectedMovie.Duration Minuten
+                            @if (selectedMovie.Duration is not null)
+                            {
+                                @:@selectedMovie.Duration Minuten
+                            }
+                            else
+                            {
+                                @:-
+                            }
                         </Column>
                     </Row>
                 }
@@ -413,16 +448,16 @@
                 @switch (relationType)
                 {
                     case RelationType.Genre:
-                        @:(Filme im Genre <strong>@personOrGenreName</strong>);
+                        <text>Filme im Genre <strong>@personOrGenreName</strong></text>
                         break;
                     case RelationType.Director:
-                        @:(Filme, in denen <strong>@personOrGenreName</strong> als Regisseur agiert);
+                        <text>Filme, in denen <strong>@personOrGenreName</strong> als Regisseur agiert</text>
                         break;
                     case RelationType.Writer:
-                        @:(Filme, die von <strong>@personOrGenreName</strong> geschrieben wurden);
+                        <text>Filme, die von <strong>@personOrGenreName</strong> geschrieben wurden</text>
                         break;
                     case RelationType.Actor:
-                        @:(Filme, in denen <strong>@personOrGenreName</strong> als Hauptdarsteller agiert);
+                        <text>Filme, in denen <strong>@personOrGenreName</strong> als Hauptdarsteller agiert</text>
                         break;
                 }
             </ModalTitle>
@@ -665,7 +700,7 @@
 
     private async Task ShowMovieModal(MovieViewModel movie)
     {
-        selectedMovie = await MovieService.GetMovieDetailAsync(movie);
+        selectedMovie = await MovieService.GetMovieDetailAsync(movie.Id);
         movieModalMode = MovieModalMode.View;
         cancelClose = true;
         await movieModal.Show();
@@ -712,7 +747,21 @@
                 }
             }
         }
-        await CloseMovieModalAsync();
+        movieModalMode = MovieModalMode.View;
+    }
+
+    private async Task HandleAbortMovieModal()
+    {
+        if (selectedMovie is not null)
+        {
+            selectedMovie = await MovieService.GetMovieDetailAsync(selectedMovie.Id);
+            movieModalMode = MovieModalMode.View;
+            StateHasChanged();
+        }
+        else
+        {
+            await CloseMovieModalAsync();
+        }
     }
 
     #endregion
@@ -727,7 +776,7 @@
         deletingMovie = movie.Title;
         deleteWarning.Show(async () =>
         {
-            if (await MovieService.DeleteMovieAsync(movie))
+            if (await MovieService.DeleteMovieAsync(movie.Id))
             {
                 allMovies?.Remove(movie);
                 StateHasChanged();
@@ -744,7 +793,7 @@
 
     private Task AbortMovieModal()
     {
-        discardWarning.Show(CloseMovieModalAsync);
+        discardWarning.Show(HandleAbortMovieModal);
         return Task.CompletedTask;
     }
 
