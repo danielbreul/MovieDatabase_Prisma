@@ -63,3 +63,4 @@ MovieDatabase/.vs
 
 # Solution
 *.slnLaunch.user
+*.csproj.user
