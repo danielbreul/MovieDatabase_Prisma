@@ -19,7 +19,7 @@ namespace MovieDatabaseFrontend.Services
                     title = "/search?title=" + WebUtility.UrlEncode(title);
                 }
                 var response = await httpClient.GetAsync("movies" + title);
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     moviesDto = await response.Content.ReadFromJsonAsync<IEnumerable<MovieDto>>();
                 }
@@ -46,7 +46,7 @@ namespace MovieDatabaseFrontend.Services
             try
             {
                 var response = await httpClient.GetAsync("movies/" + movie.Id);
-                if (response.IsSuccessStatusCode)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
                     movieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
                 }
@@ -79,8 +79,8 @@ namespace MovieDatabaseFrontend.Services
             MovieDetailDto? createdMovieDetailDto = null;
             try
             {
-                var response = await httpClient.PostAsJsonAsync("movies/", MovieViewModelToDto(movie));
-                if (response.IsSuccessStatusCode)
+                var response = await httpClient.PostAsJsonAsync("movies", MovieViewModelToDto(movie));
+                if (response.StatusCode == HttpStatusCode.Created)
                 {
                     createdMovieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
                 }
@@ -117,6 +117,10 @@ namespace MovieDatabaseFrontend.Services
             try
             {
                 var response = await httpClient.PutAsJsonAsync("movies/" + movie.Id, MovieViewModelToDto(movie));
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    return true;
+                }
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Der Film konnte nicht bearbeitet werden, da er in der Datenbank nicht existiert.");
@@ -125,13 +129,9 @@ namespace MovieDatabaseFrontend.Services
                 {
                     errorService.LogHttpResponse(response, "Der Film enthält fehlerhafte Daten und konnte deshalb nicht gespeichert werden.");
                 }
-                else if (!response.IsSuccessStatusCode)
-                {
-                    errorService.LogHttpResponse(response);
-                }
                 else
                 {
-                    return true;
+                    errorService.LogHttpResponse(response);
                 }
             }
             catch (HttpRequestException e)
@@ -150,17 +150,17 @@ namespace MovieDatabaseFrontend.Services
             try
             {
                 var response = await httpClient.DeleteAsync("movies/" + movie.Id);
-                if (response.StatusCode == HttpStatusCode.NotFound)
+                if (response.StatusCode == HttpStatusCode.NoContent)
+                {
+                    return true;
+                }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     errorService.LogMessage("Der Film konnte nicht gelöscht werden, da er in der Datenbank nicht existiert.");
                 }
-                else if (!response.IsSuccessStatusCode)
-                {
-                    errorService.LogHttpResponse(response);
-                }
                 else
                 {
-                    return true;
+                    errorService.LogHttpResponse(response);
                 }
             }
             catch (HttpRequestException e)
