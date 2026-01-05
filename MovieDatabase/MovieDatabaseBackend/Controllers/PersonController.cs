@@ -11,6 +11,11 @@ namespace MovieDatabaseBackend.Controllers
     {
         private readonly IPersonService _service = personService;
 
+        /// <summary>
+        ///     Retrieves all persons.
+        /// </summary>
+        /// <response code="200">List of all persons</response>
+        /// <response code="204">No persons in store</response>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<PersonDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -27,6 +32,11 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Creates a new person.
+        /// </summary>
+        /// <response code="201">Person successfully created</response>
+        /// <response code="400">Invalid person data provided</response>
         [HttpPost]
         [ProducesResponseType(typeof(PersonDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -43,6 +53,12 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Updates an existing person.
+        /// </summary>
+        /// <response code="200">Person successfully updated</response>
+        /// <response code="400">Invalid person data provided</response>
+        /// <response code="404">Person not found</response>
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,10 +80,16 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Deletes an existing person.
+        /// </summary>
+        /// <response code="204">Person successfully deleted</response>
+        /// <response code="404">Person not found</response>
+        /// <response code="409">Cannot delete person referenced by movies</response>
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status409Conflict, Description = "Cannot delete referenced person.")]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public IActionResult Delete(int id)
         {
             var result = _service.DeletePerson(id);
@@ -85,15 +107,29 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Retrieves all movies directed by a specific person.
+        /// </summary>
+        /// <response code="200">List of movies directed by the person</response>
+        /// <response code="204">No movies found for the person</response>
+        /// <response code="404">Person not found</response>
         [HttpGet("{id:int}/directed-movies")]
         [ProducesResponseType(typeof(MovieDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<IEnumerable<MovieDto>> GetDirectedMovies(int id)
         {
             var result = _service.GetDirectedMovies(id);
             if (result.IsSucceed)
             {
-                return Ok(result.Value);
+                if (result.Value.Any())
+                {
+                    return Ok(result.Value);
+                }
+                else
+                {
+                    return NoContent();
+                }
             }
             else
             {
@@ -101,15 +137,29 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Retrieves all movies written by a specific person.
+        /// </summary>
+        /// <response code="200">List of movies written by the person</response>
+        /// <response code="204">No movies found for the person</response>
+        /// <response code="404">Person not found</response>
         [HttpGet("{id:int}/written-movies")]
         [ProducesResponseType(typeof(MovieDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<IEnumerable<MovieDto>> GetWrittenMovies(int id)
         {
             var result = _service.GetWrittenMovies(id);
             if (result.IsSucceed)
             {
-                return Ok(result.Value);
+                if (result.Value.Any())
+                {
+                    return Ok(result.Value);
+                }
+                else
+                {
+                    return NoContent();
+                }
             }
             else
             {
@@ -117,15 +167,29 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Retrieves all movies a specific person acted in.
+        /// </summary>
+        /// <response code="200">List of movies the person acted in</response>
+        /// <response code="204">No movies found for the person</response>
+        /// <response code="404">Person not found</response>
         [HttpGet("{id:int}/acted-in-movies")]
         [ProducesResponseType(typeof(MovieDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<IEnumerable<MovieDto>> GetActedInMovies(int id)
         {
             var result = _service.GetActedInMovies(id);
             if (result.IsSucceed)
             {
-                return Ok(result.Value);
+                if (result.Value.Any())
+                {
+                    return Ok(result.Value);
+                }
+                else
+                {
+                    return NoContent();
+                }
             }
             else
             {

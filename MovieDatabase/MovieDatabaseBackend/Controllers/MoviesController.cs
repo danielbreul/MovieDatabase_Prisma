@@ -11,6 +11,11 @@ namespace MovieDatabaseBackend.Controllers
     {
         private readonly IMovieService _service = movieService;
 
+        /// <summary>
+        ///     Retrieves all movies.
+        /// </summary>
+        /// <response code="200">List of all movies</response>
+        /// <response code="204">No movies in store</response>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<MovieDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -27,6 +32,12 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Searches for movies by title.
+        /// </summary>
+        /// <param name="title">Optional title to filter movies</param>
+        /// <response code="200">List of matching movies</response>
+        /// <response code="204">No matching movies found</response>
         [HttpGet("search")]
         [ProducesResponseType(typeof(IEnumerable<MovieDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -43,9 +54,14 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Retrieves movie details by ID.
+        /// </summary>
+        /// <response code="200">Movie details</response>
+        /// <response code="404">Movie not found</response>
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(MovieDetailDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<MovieDetailDto> Get(int id)
         {
             var result = _service.GetMovie(id);
@@ -59,6 +75,11 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Creates a new movie.
+        /// </summary>
+        /// <response code="201">Movie successfully created</response>
+        /// <response code="400">Invalid movie data provided</response>
         [HttpPost]
         [ProducesResponseType(typeof(MovieDetailDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -75,6 +96,12 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Updates an existing movie.
+        /// </summary>
+        /// <response code="200">Movie successfully updated</response>
+        /// <response code="400">Invalid movie data provided</response>
+        /// <response code="404">Movie not found</response>
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -96,6 +123,11 @@ namespace MovieDatabaseBackend.Controllers
             }
         }
 
+        /// <summary>
+        ///     Deletes an existing movie.
+        /// </summary>
+        /// <response code="204">Movie successfully deleted</response>
+        /// <response code="404">Movie not found</response>
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

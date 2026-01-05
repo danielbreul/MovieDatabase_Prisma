@@ -24,7 +24,6 @@ namespace MovieDatabaseBackend.Services
 
         public Result<PersonDto?> CreatePerson(PersonCreateUpdateDto personDto)
         {
-            // Name is required
             if (string.IsNullOrWhiteSpace(personDto.Name))
             {
                 return Result<PersonDto?>.Fail(ResultState.InvalidDto, "Name is required!");
@@ -43,7 +42,6 @@ namespace MovieDatabaseBackend.Services
 
         public Result UpdatePerson(int id, PersonCreateUpdateDto personDto)
         {
-            // Name is required
             if (string.IsNullOrWhiteSpace(personDto.Name))
             {
                 return Result.Fail(ResultState.InvalidDto, "Name is required!");

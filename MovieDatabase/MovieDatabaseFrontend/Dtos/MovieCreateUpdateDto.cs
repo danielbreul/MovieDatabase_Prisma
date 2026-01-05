@@ -4,7 +4,6 @@ namespace MovieDatabaseBackend.Dtos
 {
     public class MovieCreateUpdateDto
     {
-        [Required(ErrorMessage = "Title is required")]
         public string? Title { get; set; }
         public string? Plot { get; set; }
         public DateTime? ReleaseDate { get; set; }

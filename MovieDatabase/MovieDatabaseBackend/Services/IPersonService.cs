@@ -15,7 +15,7 @@ namespace MovieDatabaseBackend.Services
         /// <summary>
         ///     Creates a new person using the specified data transfer object.
         /// </summary>
-        /// <param name="personDto">The data transfer object containing the information required to create a person. The Name property must not
+        /// <param name="person">The data transfer object containing the information required to create a person. The Name property must not
         /// be null, empty, or whitespace.</param>
         /// <returns>A <see cref="Result{T}"/> containing the created person as a <see cref="PersonDto"/> if the operation succeeds; otherwise, a failed result
         /// with a <see cref="ResultState.InvalidDto"/> state.</returns>
@@ -25,7 +25,7 @@ namespace MovieDatabaseBackend.Services
         ///     Updates the details of an existing person with the specified identifier.
         /// </summary>
         /// <param name="id">The unique identifier of the person to update.</param>
-        /// <param name="personDto">An object containing the updated person information. The Name property must not be null, empty, or
+        /// <param name="person">An object containing the updated person information. The Name property must not be null, empty, or
         /// whitespace.</param>
         /// <returns>A <see cref="Result"/> indicating the outcome of the update operation. Returns a result with state <see cref="ResultState.NotFound"/>
         /// if the person is not found, or <see cref="ResultState.InvalidDto"/> if the provided data is invalid.</returns>

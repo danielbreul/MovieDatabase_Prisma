@@ -8,13 +8,13 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
-        public IQueryable<Genre> GetGenres()
+        public IEnumerable<Genre> GetGenres()
         {
             return _context.Genres
                 .Include(g => g.Movies);
         }
 
-        public IQueryable<Genre> GetGenresByIds(IEnumerable<int> ids)
+        public IEnumerable<Genre> GetGenresByIds(IEnumerable<int> ids)
         {
             return _context.Genres
                 .Where(g => ids.Contains(g.Id));

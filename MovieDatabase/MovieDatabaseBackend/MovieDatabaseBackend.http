@@ -1,6 +1,0 @@
-@MovieDatabaseBackend_HostAddress = https://localhost:7160
-
-GET {{MovieDatabaseBackend_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

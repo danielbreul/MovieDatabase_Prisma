@@ -9,6 +9,7 @@
 
 <Heading>Movies</Heading>
 
+@* Create-button and search-bar *@
 <Row>
     <Column ColumnSize="ColumnSize.IsAuto">
         <Button Color="Color.Primary" Clicked="CreateMovieAsync">
@@ -31,6 +32,7 @@
     </Column>
 </Row>
 
+@* Movie table *@
 <Table Striped Hoverable>
     <TableHeader>
         <TableRow>
@@ -72,7 +74,7 @@
 </Table>
 
 <Modal @ref="movieModal" Opening="OnMovieModalOpening" Closing="OnMovieModalClosing">
-    <ModalContent Centered Size="ModalSize.ExtraLarge">
+    <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>
                 @(movieModalMode == MovieModalMode.Create ? "Neuen Film erstellen"
@@ -82,7 +84,7 @@
             @if (movieModalMode == MovieModalMode.View)
             {
                 <Button Margin="Margin.Is3.FromStart"
-                        Color="Color.Primary"
+                        Color="Color.Secondary"
                         Size="Size.Small"
                         Clicked="EditMovieAsync"
                         @onclick:stopPropagation>
@@ -318,7 +320,7 @@
                                            Padding="Padding.Is2"
                                            TextWeight="TextWeight.Normal"
                                            TextSize="TextSize.Small"
-                                           CloseClicked="() => OnRemoveGenre(genre)">
+                                           CloseClicked="() => RemoveGenre(genre)">
                                         @genre.Name
                                     </Badge>
                                 }
@@ -348,7 +350,7 @@
                                             Padding="Padding.Is2"
                                             TextWeight="TextWeight.Normal"
                                             TextSize="TextSize.Small"
-                                            CloseClicked="() => OnRemoveDirector(person)">
+                                            CloseClicked="() => RemoveDirector(person)">
                                         @person.Name
                                     </Badge>
                                 }
@@ -397,7 +399,7 @@
                                             Padding="Padding.Is2"
                                             TextWeight="TextWeight.Normal"
                                             TextSize="TextSize.Small"
-                                            CloseClicked="() => OnRemoveActor(person)">
+                                            CloseClicked="() => RemoveActor(person)">
                                         @person.Name
                                     </Badge>
                                 }
@@ -442,7 +444,7 @@
     </ModalContent>
 </Modal>
 
-<Modal @ref="relatedMoviesModal" Closing="OnRelatedMovieModalClosing">
+<Modal @ref="relatedMoviesModal" Closing="OnRelatedMoviesModalClosing">
     <ModalContent Centered>
         <ModalHeader>
             <ModalTitle>
@@ -496,21 +498,14 @@
     [SupplyParameterFromQuery(Name = "search")]
     public string? SearchQuery { get; set; }
     private string? previousSearch;
+
     [SupplyParameterFromQuery(Name = "id")]
     public int? Id { get; set; }
     private int? previousId;
 
     private List<MovieViewModel>? allMovies;
-    private List<PersonViewModel>? allPersons;
-    private List<GenreViewModel>? allGenres;
 
     #region Lifecycle
-
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     // allGenres = (await GenreService.GetGenresAsync()).ToList();
-    //     // allPersons = (await PersonService.GetPersonsAsync()).ToList();
-    // }
 
     private bool rendered = false;
     private bool firstProcessParameters = true;
@@ -519,11 +514,8 @@
     {
         if (firstRender)
         {
-            Console.WriteLine("FirstRender");
             rendered = true;
             await ProcessParameters();
-            allGenres = (await GenreService.GetGenresAsync()).ToList();
-            allPersons = (await PersonService.GetPersonsAsync()).ToList();
         }
     }
 
@@ -536,7 +528,7 @@
     {
         if (rendered)
         {
-            Console.WriteLine("ProcessParameters: " + firstProcessParameters);
+            // Show or close movie modal if id changed
             if (previousId != Id || firstProcessParameters)
             {
                 if (Id is not null)
@@ -549,6 +541,7 @@
                 }
             }
 
+            // Reload movie list if search query changed
             if (previousSearch != SearchQuery || firstProcessParameters)
             {
                 if (!string.IsNullOrWhiteSpace(SearchQuery))
@@ -595,12 +588,13 @@
 
     #endregion
 
-    #region Occuring Movies Modal
+    #region Related Movies Modal
 
     private Modal relatedMoviesModal = null!;
     private IEnumerable<MovieViewModel>? relatedMovies;
     private string personOrGenreName = string.Empty;
     private RelationType relationType;
+
     private enum RelationType
     {
         Genre,
@@ -631,7 +625,7 @@
         await relatedMoviesModal.Show();
     }
 
-    private Task OnRelatedMovieModalClosing(ModalClosingEventArgs e)
+    private Task OnRelatedMoviesModalClosing(ModalClosingEventArgs e)
     {
         relatedMovies = null;
         personOrGenreName = string.Empty;
@@ -647,11 +641,17 @@
 
     #region Movie Modal
 
+    // Modal fields
     private Modal movieModal = null!;
     private Validations? validations;
     private MovieModalMode movieModalMode;
     private bool cancelClose;
+
+    // Editing fields
     private MovieDetailViewModel? selectedMovie;
+    private List<PersonViewModel>? allPersons;
+    private List<GenreViewModel>? allGenres;
+    private bool allGenresAndPersonsLoaded = false;
     private List<GenreViewModel>? availableGenres;
     private List<PersonViewModel>? availableDirectors;
     private List<PersonViewModel>? availableActors;
@@ -663,12 +663,14 @@
         Edit
     }
 
+    // Rating property with special handling for nullable int
     private int ratingValue
     {
         get => selectedMovie?.Rating ?? 0;
         set => selectedMovie!.Rating = value > 0 ? value : null;
     }
 
+    // Selection properties for adding genres, directors, actors, and selecting writer
     private int? addGenre
     {
         get => null;
@@ -679,7 +681,6 @@
             {
                 availableGenres?.Remove(genre);
                 selectedMovie?.Genres.Add(genre);
-                addGenre = null;
             }
         }
     }
@@ -704,7 +705,6 @@
             {
                 availableDirectors?.Remove(person);
                 selectedMovie?.Directors.Add(person);
-                addGenre = null;
             }
         }
     }
@@ -719,31 +719,37 @@
             {
                 availableActors?.Remove(person);
                 selectedMovie?.Actors.Add(person);
-                addGenre = null;
             }
         }
     }
 
-    private void OnRemoveGenre(GenreViewModel genre)
+    private void RemoveGenre(GenreViewModel genre)
     {
         selectedMovie?.Genres.Remove(genre);
         availableGenres?.Add(genre);
     }
 
-    private void OnRemoveDirector(PersonViewModel person)
+    private void RemoveDirector(PersonViewModel person)
     {
         selectedMovie?.Directors.Remove(person);
         availableDirectors?.Add(person);
     }
 
-    private void OnRemoveActor(PersonViewModel person)
+    private void RemoveActor(PersonViewModel person)
     {
         selectedMovie?.Actors.Remove(person);
         availableActors?.Add(person);
     }
 
-    private void UpdateAvailableSelections()
+    private async Task InitAvailableSelectionsAsync()
     {
+        // Initialize available selections based on selected movie
+        if (!allGenresAndPersonsLoaded)
+        {
+            allGenres = (await GenreService.GetGenresAsync()).ToList();
+            allPersons = (await PersonService.GetPersonsAsync()).ToList();
+            allGenresAndPersonsLoaded = true;
+        }
         availableGenres = allGenres?.Where(g => !selectedMovie?.Genres.Any(g1 => g1.Id == g.Id) ?? true).ToList();
         availableDirectors = allPersons?.Where(p => !selectedMovie?.Directors.Any(p1 => p1.Id == p.Id) ?? true).ToList();
         availableActors = allPersons?.Where(p => !selectedMovie?.Actors.Any(p1 => p1.Id == p.Id) ?? true).ToList();
@@ -752,15 +758,15 @@
     private async Task CreateMovieAsync()
     {
         selectedMovie = new MovieDetailViewModel();
-        UpdateAvailableSelections();
         movieModalMode = MovieModalMode.Create;
         cancelClose = true;
         await movieModal.Show();
+        await InitAvailableSelectionsAsync();
     }
 
     private async Task EditMovieAsync()
     {
-        UpdateAvailableSelections();
+        await InitAvailableSelectionsAsync();
         movieModalMode = MovieModalMode.Edit;
     }
 

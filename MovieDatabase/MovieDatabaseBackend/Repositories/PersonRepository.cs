@@ -8,7 +8,7 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
-        public IQueryable<Person> GetPersons()
+        public IEnumerable<Person> GetPersons()
         {
             return _context.Persons
                 .Include(p => p.DirectedMovies)
@@ -16,7 +16,7 @@ namespace MovieDatabaseBackend.Repositories
                 .Include(p => p.WrittenMovies);
         }
 
-        public IQueryable<Person> GetPersonsByIds(IEnumerable<int> ids)
+        public IEnumerable<Person> GetPersonsByIds(IEnumerable<int> ids)
         {
             return _context.Persons
                 .Where(p => ids.Contains(p.Id));

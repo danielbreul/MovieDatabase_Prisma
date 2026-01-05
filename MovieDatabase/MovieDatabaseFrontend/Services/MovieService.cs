@@ -39,7 +39,7 @@ namespace MovieDatabaseFrontend.Services
 
             return moviesDto?.Select(x => new MovieViewModel { Id = x.Id, Title = x.Title }) ?? [];
         }
-
+        
         public async Task<MovieDetailViewModel?> GetMovieDetailAsync(int id)
         {
             MovieDetailDto? movieDetailDto = null;
@@ -49,6 +49,10 @@ namespace MovieDatabaseFrontend.Services
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     movieDetailDto = await response.Content.ReadFromJsonAsync<MovieDetailDto>();
+                }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    errorService.LogMessage("Der Film existiert in der Datenbank nicht.");
                 }
                 else if (response.StatusCode != HttpStatusCode.NoContent)
                 {

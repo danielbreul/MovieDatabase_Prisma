@@ -150,6 +150,10 @@ namespace MovieDatabaseFrontend.Services
                 {
                     moviesDto = await response.Content.ReadFromJsonAsync<IEnumerable<MovieDto>>();
                 }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    errorService.LogMessage("Das Genre existiert in der Datenbank nicht.");
+                }
                 else if (response.StatusCode != HttpStatusCode.NoContent)
                 {
                     errorService.LogHttpResponse(response);

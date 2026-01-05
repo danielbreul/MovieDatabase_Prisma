@@ -38,7 +38,6 @@ namespace MovieDatabaseBackend.Services
 
         public Result<MovieDetailDto?> CreateMovie(MovieCreateUpdateDto movieDto)
         {
-            // Title is required
             if (string.IsNullOrWhiteSpace(movieDto.Title))
             {
                 return Result<MovieDetailDto?>.Fail(ResultState.InvalidDto, "Title is required!");
@@ -68,7 +67,6 @@ namespace MovieDatabaseBackend.Services
 
         public Result UpdateMovie(int id, MovieCreateUpdateDto movieDto)
         {
-            // Title is required
             if (string.IsNullOrWhiteSpace(movieDto.Title))
             {
                 return Result.Fail(ResultState.InvalidDto, "Title is required!");
@@ -90,7 +88,7 @@ namespace MovieDatabaseBackend.Services
             var errorMessage = TransferGenreAndPersonsToEntity(movieDto, movie);
             if (!string.IsNullOrWhiteSpace(errorMessage))
             {
-                return Result<MovieDetailDto?>.Fail(ResultState.InvalidDto, errorMessage);
+                return Result.Fail(ResultState.InvalidDto, errorMessage);
             }
 
             _uof.SaveChanges();

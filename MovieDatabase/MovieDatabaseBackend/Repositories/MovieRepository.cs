@@ -8,7 +8,7 @@ namespace MovieDatabaseBackend.Repositories
     {
         private readonly MovieDbContext _context = context;
 
-        public IQueryable<Movie> GetMovies()
+        public IEnumerable<Movie> GetMovies()
         {
             return _context.Movies
                 .Include(m => m.Genres)

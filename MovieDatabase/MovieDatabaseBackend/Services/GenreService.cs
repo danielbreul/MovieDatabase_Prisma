@@ -24,7 +24,6 @@ namespace MovieDatabaseBackend.Services
 
         public Result<GenreDto?> CreateGenre(GenreCreateUpdateDto genreDto)
         {
-            // Name is required
             if (string.IsNullOrWhiteSpace(genreDto.Name))
             {
                 return Result<GenreDto?>.Fail(ResultState.InvalidDto, "Name is required!");
@@ -43,7 +42,6 @@ namespace MovieDatabaseBackend.Services
 
         public Result UpdateGenre(int id, GenreCreateUpdateDto genreDto)
         {
-            // Name is required
             if (string.IsNullOrWhiteSpace(genreDto.Name))
             {
                 return Result.Fail(ResultState.InvalidDto, "Name is required!");

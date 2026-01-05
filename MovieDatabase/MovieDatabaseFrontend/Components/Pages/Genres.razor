@@ -6,7 +6,7 @@
 
 <Heading>Genres</Heading>
 
-<Button Color="Color.Primary" Clicked="CreateGenre">
+<Button Color="Color.Primary" Clicked="CreateGenreAsync">
     <Icon Name="IconName.Add" />
     Neues Genre
 </Button>
@@ -29,7 +29,7 @@
                     <TableRow>
                         <TableRowCell>@genre.Name</TableRowCell>
                         <TableRowCell TextAlignment="TextAlignment.Center">
-                            <Button Color="Color.Secondary" Size="Size.Small" Clicked="@(() => EditGenre(genre))" @onclick:stopPropagation>
+                            <Button Color="Color.Secondary" Size="Size.Small" Clicked="@(() => EditGenreAsync(genre))" @onclick:stopPropagation>
                                 <Icon Name="IconName.Edit" />
                             </Button>
                         </TableRowCell>
@@ -69,7 +69,7 @@
                 <Field Horizontal>
                     <FieldLabel RequiredIndicator ColumnSize="ColumnSize.Is2">Name</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is5">
-                        <TextEdit @bind-Text="editingGenre">
+                        <TextEdit @bind-Text="editingGenreName">
                             <Feedback>
                                 <ValidationError>Name ist erforderlich.</ValidationError>
                             </Feedback>
@@ -80,7 +80,7 @@
         </ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="AbortGenreModal">Abbrechen</Button>
-            <Button Color="Color.Primary" Clicked="SaveGenre">Speichern</Button>
+            <Button Color="Color.Primary" Clicked="SaveGenreAsync">Speichern</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
@@ -116,12 +116,15 @@
 
     #region Genre Modal
 
+    // Modal fields
     private Modal genreModal = null!;
     private Validation? validation;
     private GenreModalMode genreModalMode;
     private bool cancelClose;
+
+    // Editing fields
     private GenreViewModel? selectedGenre;
-    private string editingGenre = string.Empty;
+    private string editingGenreName = string.Empty;
 
     private enum GenreModalMode
     {
@@ -129,18 +132,18 @@
         Edit
     }
 
-    private async Task CreateGenre()
+    private async Task CreateGenreAsync()
     {
-        editingGenre = string.Empty;
+        editingGenreName = string.Empty;
         genreModalMode = GenreModalMode.Create;
         cancelClose = true;
         await genreModal.Show();
     }
 
-    private async Task EditGenre(GenreViewModel genre)
+    private async Task EditGenreAsync(GenreViewModel genre)
     {
         selectedGenre = genre;
-        editingGenre = genre.Name;
+        editingGenreName = genre.Name;
         genreModalMode = GenreModalMode.Edit;
         cancelClose = true;
         await genreModal.Show();
@@ -157,16 +160,16 @@
         cancelClose = false;
         await genreModal.Hide();
         selectedGenre = null;
-        editingGenre = string.Empty;
+        editingGenreName = string.Empty;
     }
 
-    private async Task SaveGenre()
+    private async Task SaveGenreAsync()
     {
         if (validation?.Status == ValidationStatus.Success)
         {
             if (genreModalMode == GenreModalMode.Create)
             {
-                var newGenre = await GenreService.CreateGenreAsync(new GenreViewModel { Name = editingGenre });
+                var newGenre = await GenreService.CreateGenreAsync(new GenreViewModel { Name = editingGenreName });
                 if (newGenre is not null)
                 {
                     allGenres?.Add(newGenre);
@@ -175,14 +178,14 @@
             }
             else if (selectedGenre is not null && genreModalMode == GenreModalMode.Edit)
             {
-                if (await GenreService.UpdateGenreAsync(new GenreViewModel { Id = selectedGenre.Id, Name = editingGenre }))
+                if (await GenreService.UpdateGenreAsync(new GenreViewModel { Id = selectedGenre.Id, Name = editingGenreName }))
                 {
-                    selectedGenre.Name = editingGenre;
+                    selectedGenre.Name = editingGenreName;
                     StateHasChanged();
                 }
             }
+            await CloseGenreModalAsync();
         }
-        await CloseGenreModalAsync();
     }
 
     #endregion

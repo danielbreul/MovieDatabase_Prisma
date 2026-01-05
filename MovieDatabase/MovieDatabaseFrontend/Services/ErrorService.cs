@@ -4,7 +4,7 @@
     {
         public event Action<string>? OnError;
 
-        public async void LogHttpResponse(HttpResponseMessage response, string? message = null)
+        public void LogHttpResponse(HttpResponseMessage response, string? message = null)
         {
             message = message is not null ? $"Nachricht: {message} " : string.Empty;
             OnError?.Invoke($"{message}Unerwartete HTTP-Response. Statuscode: {response.StatusCode}({(int)response.StatusCode})");

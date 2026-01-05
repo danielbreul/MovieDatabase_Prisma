@@ -6,7 +6,7 @@
 
 <Heading>Persons</Heading>
 
-<Button Color="Color.Primary" Clicked="CreatePerson">
+<Button Color="Color.Primary" Clicked="CreatePersonAsync">
     <Icon Name="IconName.Add" />
     Neue Person
 </Button>
@@ -29,7 +29,7 @@
                     <TableRow>
                         <TableRowCell>@person.Name</TableRowCell>
                         <TableRowCell TextAlignment="TextAlignment.Center">
-                            <Button Color="Color.Secondary" Size="Size.Small" Clicked="@(() => EditPerson(person))" @onclick:stopPropagation>
+                            <Button Color="Color.Secondary" Size="Size.Small" Clicked="@(() => EditPersonAsync(person))" @onclick:stopPropagation>
                                 <Icon Name="IconName.Edit" />
                             </Button>
                         </TableRowCell>
@@ -69,7 +69,7 @@
                 <Field Horizontal>
                     <FieldLabel RequiredIndicator ColumnSize="ColumnSize.Is2">Name</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is5">
-                        <TextEdit @bind-Text="editingPerson">
+                        <TextEdit @bind-Text="editingPersonName">
                             <Feedback>
                                 <ValidationError>Name ist erforderlich.</ValidationError>
                             </Feedback>
@@ -80,7 +80,7 @@
         </ModalBody>
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="AbortPersonModal">Abbrechen</Button>
-            <Button Color="Color.Primary" Clicked="SavePerson">Speichern</Button>
+            <Button Color="Color.Primary" Clicked="SavePersonAsync">Speichern</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
@@ -116,12 +116,15 @@
 
     #region Person Modal
 
+    // Modal fields
     private Modal personModal = null!;
     private Validation? validation;
     private PenreModalMode personModalMode;
     private bool cancelClose;
+
+    // Editing fields
     private PersonViewModel? selectedPerson;
-    private string editingPerson = string.Empty;
+    private string editingPersonName = string.Empty;
 
     private enum PenreModalMode
     {
@@ -129,18 +132,18 @@
         Edit
     }
 
-    private async Task CreatePerson()
+    private async Task CreatePersonAsync()
     {
-        editingPerson = string.Empty;
+        editingPersonName = string.Empty;
         personModalMode = PenreModalMode.Create;
         cancelClose = true;
         await personModal.Show();
     }
 
-    private async Task EditPerson(PersonViewModel person)
+    private async Task EditPersonAsync(PersonViewModel person)
     {
         selectedPerson = person;
-        editingPerson = person.Name;
+        editingPersonName = person.Name;
         personModalMode = PenreModalMode.Edit;
         cancelClose = true;
         await personModal.Show();
@@ -157,16 +160,16 @@
         cancelClose = false;
         await personModal.Hide();
         selectedPerson = null;
-        editingPerson = string.Empty;
+        editingPersonName = string.Empty;
     }
 
-    private async Task SavePerson()
+    private async Task SavePersonAsync()
     {
         if (validation?.Status == ValidationStatus.Success)
         {
             if (personModalMode == PenreModalMode.Create)
             {
-                var newPerson = await PersonService.CreatePersonAsync(new PersonViewModel { Name = editingPerson });
+                var newPerson = await PersonService.CreatePersonAsync(new PersonViewModel { Name = editingPersonName });
                 if (newPerson is not null)
                 {
                     allPersons?.Add(newPerson);
@@ -175,14 +178,14 @@
             }
             else if (selectedPerson is not null && personModalMode == PenreModalMode.Edit)
             {
-                if (await PersonService.UpdatePersonAsync(new PersonViewModel { Id = selectedPerson.Id, Name = editingPerson }))
+                if (await PersonService.UpdatePersonAsync(new PersonViewModel { Id = selectedPerson.Id, Name = editingPersonName }))
                 {
-                    selectedPerson.Name = editingPerson;
+                    selectedPerson.Name = editingPersonName;
                     StateHasChanged();
                 }
             }
+            await ClosePersonModalAsync();
         }
-        await ClosePersonModalAsync();
     }
 
     #endregion
