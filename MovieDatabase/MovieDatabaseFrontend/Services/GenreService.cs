@@ -107,11 +107,11 @@ namespace MovieDatabaseFrontend.Services
             return false;
         }
 
-        public async Task<bool> DeleteGenreAsync(GenreViewModel genre)
+        public async Task<bool> DeleteGenreAsync(int id)
         {
             try
             {
-                var response = await httpClient.DeleteAsync("genres/" + genre.Id);
+                var response = await httpClient.DeleteAsync("genres/" + id);
                 if (response.StatusCode == HttpStatusCode.NoContent)
                 {
                     return true;

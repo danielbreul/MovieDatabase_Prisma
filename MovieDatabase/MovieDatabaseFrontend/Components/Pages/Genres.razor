@@ -195,7 +195,7 @@
         deletingGenre = genre.Name;
         deleteWarning.Show(async () =>
         {
-            if (await GenreService.DeleteGenreAsync(genre))
+            if (await GenreService.DeleteGenreAsync(genre.Id))
             {
                 allGenres?.Remove(genre);
                 StateHasChanged();
